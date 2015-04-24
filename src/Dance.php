@@ -6,27 +6,42 @@ namespace Dancery;
  * Resource definition builder.
  */
 class Dance {
-    private $conf;
+    public $conf;
 
     static function create(Dance $default = null) {
         return new self($default ? $default->conf : []);
     }
 
     function __construct(array $defaults = []) {
-        $this->conf = array_merge($this->conf, [
+        $builtin = [
             'allowed-methods' => [],
             'available-media-types' => [],
-
             'new?' => false,
             'service-available?' => true,
+            'authorized?' => true,
+            'allowed?' => true,
+            'valid-entity-length?' => true,
+            'processable?' => true,
+            'exists?' => true,
             'known-method?' => function(Song $context) {
                 $methods = ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'];
                 return in_array($context->getRequest()->getMethod(), $methods);
             },
             'method-allowed?' => function(Song $context) {
-                return in_array($context->getRequest()->getMethod(), $this->conf['allowed-methods']);
+                return in_array($context->getRequest()->getMethod(), $context['allowed-methods']);
+            },
+            'valid-content-header?' => function(Song $context) {
+                return true; //TODO validate content header!
+            },
+            'known-content-type?' => function(Song $context) {
+                $type = $context->getRequest()->getContentType();
+                return $type === null || in_array($type, $context['available-media-types']);
+            },
+            'method-put?' => function(Song $context) {
+                return $context->getRequest()->getMethod() == 'PUT';
             }
-        ]);
+        ];
+        $this->conf = array_merge($builtin, $defaults);
     }
 
     function __invoke($key, $context, $default = null) {
@@ -54,13 +69,13 @@ class Dance {
         return $this;
     }
 
-    function allowedMethods(...$methods) {
-        $this->conf['allowed-methods'] = $methods;
+    function allowedMethods() {
+        $this->conf['allowed-methods'] = func_get_args();
         return $this;
     }
 
-    function availableMediaTypes(...$types) {
-        $this->conf['available-media-types'] = $types;
+    function availableMediaTypes() {
+        $this->conf['available-media-types'] = func_get_args();
         return $this;
     }
 }

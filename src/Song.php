@@ -4,11 +4,13 @@ namespace Dancery;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class Song {
+class Song implements \ArrayAccess {
     private $request;
     private $data = [];
-    function __construct(Request $request) {
+    private $self;
+    function __construct(Request $request, array $self) {
         $this->request = $request;
+        $this->self = $self;
     }
 
     /**
@@ -22,5 +24,21 @@ class Song {
     }
     function __get($key) {
         return @$this->data[$key];
+    }
+
+    public function offsetExists($offset) {
+        return array_key_exists($offset, $this->self);
+    }
+
+    public function offsetGet($offset) {
+        return @$this->self[$offset];
+    }
+
+    public function offsetSet($offset, $value) {
+        throw new \Exception();
+    }
+
+    public function offsetUnset($offset) {
+        throw new \Exception();
     }
 }

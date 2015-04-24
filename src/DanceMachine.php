@@ -15,7 +15,11 @@ class DanceMachine {
     function __construct() {
         $this->serializers = [
             'application/json' => 'json_encode',
-            'text/plain' => 'strval'
+            'text/plain' => 'strval',
+            'text/php' => function($val) {
+                return var_export($val, true);
+            },
+            'application/php' => 'serialize'
         ];
 
         $this->decisions = [
@@ -90,7 +94,7 @@ class DanceMachine {
     }
 
     private function isLeafNode($node) {
-        return is_int($node);
+        return is_array($node);
     }
 
     private function dispatch(Dance $resource, Song $context, $init = 'service-available?') {
@@ -101,7 +105,10 @@ class DanceMachine {
                 $result = $resource($node, $context);
                 $node = $result ? $pass : $fail;
             } else if ($this->isHandler($node)) {
-                $resource($node, $context);
+                $result = $resource($node, $context);
+                if ($result !== null) {
+                    $context->body = strval($result); //TODO: serialize based on media-type
+                }
                 $node = $this->decisions[$node];
             } else {
                 throw new \Exception();
@@ -116,10 +123,9 @@ class DanceMachine {
      * @return Response
      */
     function perform(Dance $resource, Request $request = null) {
-        $context = new Song($request ?: Request::createFromGlobals());
-        $node = $this->dispatch($resource, $context);
-        //TODO response body
-        return Response::create('', $node);
+        $context = new Song($request ?: Request::createFromGlobals(), $resource->conf);
+        list($status, $message) = $this->dispatch($resource, $context);
+        return Response::create($context->body ?: $message, $status);
     }
 
     function serialize($value, $mediaType) {
