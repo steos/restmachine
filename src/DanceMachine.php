@@ -38,16 +38,52 @@ class DanceMachine {
             'acceptable-charset-available?' => ['accept-encoding?', Response::HTTP_NOT_ACCEPTABLE],
             'accept-encoding?' => ['acceptable-encoding-available?', 'exists?'],
             'acceptable-encoding-available?' => ['exists?', Response::HTTP_NOT_ACCEPTABLE],
+            'exists?' => ['if-match-exists?', 'if-match-star-for-missing?'],
+            'if-match-star-for-missing?' => [Response::HTTP_PRECONDITION_FAILED, 'PUT?'],
+            'PUT?' => ['put-to-different-url?', 'existed?'],
+            'existed?' => ['moved-permanently?', 'post-to-missing?'],
+            'moved-permanently' => [Response::HTTP_MOVED_PERMANENTLY, 'moved-temporarily?'],
+            'moved-temporarily' => [Response::HTTP_TEMPORARY_REDIRECT, 'post-to-gone?'],
+            'post-to-gone?' => ['can-post-to-gone?', Response::HTTP_GONE],
+            'can-post-to-gone?' => ['post!', Response::HTTP_GONE],
+            'post-to-missing?' => ['can-post-to-missing?', Response::HTTP_NOT_FOUND],
+            'can-post-to-missing?' => ['post!', Response::HTTP_NOT_FOUND],
+
+            'post!' => 'post-redirect?',
+
+            'post-redirect?' => [Response::HTTP_SEE_OTHER, 'new?'],
+            'new?' => [Response::HTTP_CREATED, 'respond-with-entity?'],
+            'respond-with-entity?' => ['multiple-representations?', Response::HTTP_NO_CONTENT],
+            'multiple-representations?' => [Response::HTTP_MULTIPLE_CHOICES, Response::HTTP_OK]
 
         ];
     }
 
-    private function dispatch(Dance $resource, Song $context, $init) {
+    private function isHandler($node) {
+        return is_string($node) && substr($node, -1) == '!';
+    }
+
+    private function isDecision($node) {
+        return is_string($node) && substr($node, -1) == '?';
+    }
+
+    private function isLeafNode($node) {
+        return is_int($node);
+    }
+
+    private function dispatch(Dance $resource, Song $context, $init = 'service-available?') {
         $node = $init;
-        while (is_string($node)) {
-            list($pass, $fail) = $this->decisions[$node];
-            $result = $resource($node, $context);
-            $node = $result ? $pass : $fail;
+        while (!$this->isLeafNode($node)) {
+            if ($this->isDecision($node)) {
+                list($pass, $fail) = $this->decisions[$node];
+                $result = $resource($node, $context);
+                $node = $result ? $pass : $fail;
+            } else if ($this->isHandler($node)) {
+                $resource($node, $context);
+                $node = $this->decisions[$node];
+            } else {
+                throw new \Exception();
+            }
         }
         return $node;
     }
@@ -59,9 +95,9 @@ class DanceMachine {
      */
     function perform(Dance $resource, Request $request = null) {
         $context = new Song($request ?: Request::createFromGlobals());
-        $status = $this->dispatch($resource, $context, 'isServiceAvailable');
-        //TODO handlers
-        return Response::create('', $status);
+        $node = $this->dispatch($resource, $context);
+        //TODO response body
+        return Response::create('', $node);
     }
 
     function serialize($value, $mediaType) {

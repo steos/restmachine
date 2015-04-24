@@ -40,17 +40,17 @@ class Dance {
     }
 
     function get(callable $f) {
-        $this->conf['get'] = $f;
+        $this->conf['get!'] = $f;
         return $this;
     }
 
     function post(callable $f) {
-        $this->conf['post'] = $f;
+        $this->conf['post!'] = $f;
         return $this;
     }
 
     function put(callable $f) {
-        $this->conf['put'] = $f;
+        $this->conf['put!'] = $f;
         return $this;
     }
 
