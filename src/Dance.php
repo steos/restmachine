@@ -54,8 +54,8 @@ class Dance {
             : $value;
     }
 
-    function get(callable $f) {
-        $this->conf['get!'] = $f;
+    function handleOk(callable $f) {
+        $this->conf['handle-ok'] = $f;
         return $this;
     }
 

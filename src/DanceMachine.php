@@ -141,10 +141,24 @@ class DanceMachine {
         return [$node, $this->graph[$node]];
     }
 
+    private function toResponse($handlerResult, $status, Song $context) {
+        //TODO representation!
+        return Response::create(
+            var_export($handlerResult, true) . "\r\n",
+            $status,
+            ['content-type' => 'application/php']
+        );
+    }
+
     private function runHandler($name, $status, Song $context) {
         if (isset($context[$name])) {
-            //TODO run handler
-            throw new \Exception('todo');
+            $handler = $context[$name];
+            if (!is_callable($handler)) {
+                throw new \Exception();
+            }
+            $result = call_user_func($handler, $context);
+            return $this->toResponse($result, $status, $context);
+
         } else {
             return Response::create('', $status);
         }
