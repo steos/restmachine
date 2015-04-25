@@ -61,6 +61,6 @@ Pre-alpha at best. Contributions, suggestions, flames are welcome.
 
 ## License
 
-Copyright © 2015 Stefan Oestreicher and contributors.
+Copyright Â© 2015 Stefan Oestreicher and contributors.
 
 Distributed under the terms of the BSD-3-Clause license.
