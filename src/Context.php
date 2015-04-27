@@ -1,10 +1,10 @@
 <?php
 
-namespace Dancery;
+namespace RestMachine;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class Song implements \ArrayAccess {
+class Context implements \ArrayAccess {
     private $request;
     private $data = [];
     private $self;

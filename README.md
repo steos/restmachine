@@ -1,16 +1,16 @@
-# Dancery
+# restmachine
 
-Dancery is a [webmachine](https://github.com/basho/webmachine) implementation for PHP.
+restmachine is a [webmachine](https://github.com/basho/webmachine) implementation for PHP.
 
 ## Example
 
 ```php
-use Dancery\Dance;
-use Dancery\DanceMachine;
+use RestMachine\Resource;
+use RestMachine\WebMachine;
 
-$danceMachine = new DanceMachine();
-$danceMachine->perform(
-  Dance::create()
+$webMachine = new WebMachine();
+$webMachine->run(
+  Resource::create()
     ->availableMediaTypes('application/json', 'application/php')
     ->allowedMethods('GET', 'PUT')
     ->isExisting(function($context) {
@@ -41,14 +41,14 @@ $danceMachine->perform(
 ```
 {
   "require": {
-    "steos/dancery": "dev-master"
+    "steos/restmachine": "dev-master"
   }
 }
 ```
 
 ## Minimum PHP Version
 
-Dancery currently requires PHP 5.5 at a minimum.
+restmachine currently requires PHP 5.5 at a minimum.
 
 ## Credits
 

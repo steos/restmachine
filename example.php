@@ -2,32 +2,32 @@
 
 require_once 'vendor/autoload.php';
 
-use Dancery\Soloist;
-use Dancery\Dance;
-use Dancery\Song;
+use RestMachine\Application;
+use RestMachine\Resource;
+use RestMachine\Context;
 
-$defaults = Dance::create()
+$defaults = Resource::create()
     ->availableMediaTypes('application/json');
 
-$fooCollection = Dance::create($defaults)
+$fooCollection = Resource::create($defaults)
     ->allowedMethods('GET', 'POST')
-    ->get(function(Song $context) {
+    ->get(function(Context $context) {
         return ['hi there'];
     })
-    ->post(function(Song $context) {
+    ->post(function(Context $context) {
         return ['foo' => 'the response'];
     });
 
-$fooEntity = Dance::create($defaults)
+$fooEntity = Resource::create($defaults)
     ->allowedMethods('GET', 'PUT')
-    ->get(function(Song $context) {
+    ->get(function(Context $context) {
         return ['return the entity'];
     })
-    ->put(function(Song $context) {
+    ->put(function(Context $context) {
         return ['update the entity'];
     });
 
-Soloist::dance([
+Application::serve([
     '/foo' => [
         'name' => 'foo',
         'resource' => $fooCollection,

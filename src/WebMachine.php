@@ -1,6 +1,6 @@
 <?php
 
-namespace Dancery;
+namespace RestMachine;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * The actual webmachine logic.
  */
-class DanceMachine {
+class WebMachine {
     private $serializers;
     private $graph;
 
@@ -124,7 +124,7 @@ class DanceMachine {
         return is_string($node) && substr($node, 0, 7) == 'handle-';
     }
 
-    private function dispatch(Dance $resource, Song $context, $init = 'service-available?') {
+    private function dispatch(Resource $resource, Context $context, $init = 'service-available?') {
         $node = $init;
         while (!$this->isHandler($node)) {
             if ($this->isDecision($node)) {
@@ -141,7 +141,7 @@ class DanceMachine {
         return [$node, $this->graph[$node]];
     }
 
-    private function toResponse($handlerResult, $status, Song $context) {
+    private function toResponse($handlerResult, $status, Context $context) {
         //TODO representation!
         return Response::create(
             var_export($handlerResult, true) . "\r\n",
@@ -150,7 +150,7 @@ class DanceMachine {
         );
     }
 
-    private function runHandler($name, $status, Song $context) {
+    private function runHandler($name, $status, Context $context) {
         if (isset($context[$name])) {
             $handler = $context[$name];
             if (!is_callable($handler)) {
@@ -165,12 +165,12 @@ class DanceMachine {
     }
 
     /**
-     * @param \Dancery\Dance $resource
+     * @param \RestMachine\Resource $resource
      * @param Request $request
      * @return Response
      */
-    function perform(Dance $resource, Request $request = null) {
-        $context = new Song($request ?: Request::createFromGlobals(), $resource->conf);
+    function run(Resource $resource, Request $request = null) {
+        $context = new Context($request ?: Request::createFromGlobals(), $resource->conf);
         list($handler, $status) = $this->dispatch($resource, $context);
         return $this->runHandler($handler, $status, $context);
     }

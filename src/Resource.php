@@ -1,43 +1,45 @@
 <?php
 
-namespace Dancery;
+namespace RestMachine;
 
 /**
  * Resource definition builder.
  */
-class Dance {
+class Resource {
     public $conf;
 
-    static function create(Dance $default = null) {
+    static function create(Resource $default = null) {
         return new self($default ? $default->conf : []);
     }
 
     function __construct(array $defaults = []) {
         $builtin = [
-            'allowed-methods' => [],
+            'allowed-methods' => ['GET'],
             'available-media-types' => [],
-            'new?' => false,
+            'available-languages' => ['*'],
+            'available-charsets' => ['UTF-8'],
+            'available-encodings' => ['identity'],
+
+            'new?' => true,
             'service-available?' => true,
             'authorized?' => true,
             'allowed?' => true,
+            'valid-content-header?' => true,
             'valid-entity-length?' => true,
             'processable?' => true,
             'exists?' => true,
-            'known-method?' => function(Song $context) {
+            'can-put-to-missing?' => true,
+            'delete-enacted?' => true,
+            'known-content-type?' => true,
+
+            'known-method?' => function(Context $context) {
                 $methods = ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'];
                 return in_array($context->getRequest()->getMethod(), $methods);
             },
-            'method-allowed?' => function(Song $context) {
+            'method-allowed?' => function(Context $context) {
                 return in_array($context->getRequest()->getMethod(), $context['allowed-methods']);
             },
-            'valid-content-header?' => function(Song $context) {
-                return true; //TODO validate content header!
-            },
-            'known-content-type?' => function(Song $context) {
-                $type = $context->getRequest()->getContentType();
-                return $type === null || in_array($type, $context['available-media-types']);
-            },
-            'method-put?' => function(Song $context) {
+            'method-put?' => function(Context $context) {
                 return $context->getRequest()->getMethod() == 'PUT';
             }
         ];
