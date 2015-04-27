@@ -15,22 +15,24 @@ $webMachine->run(
     ->allowedMethods('GET', 'PUT')
     ->isExisting(function($context) {
         $context->entity = $db->find($context->param('id'));
-        return $entity !== null;
+        return $context->entity !== null;
     })
     ->isMalformed(function($context) {
-       if ($context->request()->getMethod() == 'PUT') {
-         $context->requestData = json_decode($context->request()->getBody());
+       if ($context->getRequest()->getMethod() == 'PUT') {
+         $context->requestData = json_decode($context->getRequest()->getBody());
          return json_last_error();
        }
        return false;
     })
     ->isProcessable(function($context) {
-        return $context->request()->getMethod() != 'PUT'
+        return $context->getRequest()->getMethod() != 'PUT'
           || $validator->isValid($context->requestData);
     })
-    ->get('entity')
     ->put(function($context) {
-        $db->update($context->param('id'), $context->requestData);
+        $context->entity = $db->update($context->param('id'), $context->requestData);
+    })
+    ->handleOk(function($context) {
+        return $context->entity;
     })
 );
 ```
