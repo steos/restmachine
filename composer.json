@@ -7,6 +7,6 @@
         "symfony/http-foundation": "~2.6"
     },
     "autoload": {
-        "psr-4": {"Dancery\\": "src/"}
+        "psr-4": {"RestMachine\\": "src/"}
     }
 }

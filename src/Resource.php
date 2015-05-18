@@ -4,6 +4,15 @@ namespace RestMachine;
 
 /**
  * Resource definition builder.
+ *
+ * @method \RestMachine\Resource handleOk(mixed $value)
+ * @method \RestMachine\Resource post(mixed $value)
+ * @method \RestMachine\Resource put(mixed $value)
+ * @method \RestMachine\Resource patch(mixed $value)
+ * @method \RestMachine\Resource delete(mixed $value)
+ * @method \RestMachine\Resource allowedMethods(mixed $value)
+ * @method \RestMachine\Resource availableMediaTypes(mixed $value)
+ * @method \RestMachine\Resource isMalformed(mixed $value)
  */
 class Resource {
     public $conf;
@@ -56,28 +65,38 @@ class Resource {
             : $value;
     }
 
-    function handleOk(callable $f) {
-        $this->conf['handle-ok'] = $f;
+    public function __call($method, array $args) {
+        $this->conf[$this->keyOf($method)] = count($args) == 1 ? $args[0] : $args;
         return $this;
     }
 
-    function post(callable $f) {
-        $this->conf['post!'] = $f;
-        return $this;
+    private function keyOf($method) {
+        if (in_array($method, ['put', 'post', 'patch', 'delete'])) {
+            return $method . '!';
+        }
+        $key = self::paramCase($method);
+        if (strlen($key) > 3 && substr($method, 0, 3) == 'is-') {
+            return substr($key, 3) . '?';
+        }
+        return $key;
     }
 
-    function put(callable $f) {
-        $this->conf['put!'] = $f;
-        return $this;
+    static function paramCase($str) {
+        return implode('-', array_map('strtolower', self::splitWhen($str, 'ctype_upper')));
     }
 
-    function allowedMethods() {
-        $this->conf['allowed-methods'] = func_get_args();
-        return $this;
-    }
-
-    function availableMediaTypes() {
-        $this->conf['available-media-types'] = func_get_args();
-        return $this;
+    static function splitWhen($str, callable $pred) {
+        $xs = [];
+        $offset = 0;
+        for ($i = 0, $len = strlen($str); $i < $len; ++$i) {
+            if (call_user_func($pred, $str[$i])) {
+                $xs[] = substr($str, $offset, $i - $offset);
+                $offset = $i;
+            }
+        }
+        if ($offset < $len - 1) {
+            $xs[] = substr($str, $offset);
+        }
+        return $xs;
     }
 }
