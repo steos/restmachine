@@ -5,7 +5,7 @@ namespace RestMachine;
 
 class Negotiate {
 
-    static function bestAllowedContentType($acceptable, $allowed) {
+    static function bestAllowedContentType(array $acceptable, array $allowed) {
         foreach ($acceptable as $accept) {
             foreach ($allowed as $type) {
                 if ($match = self::acceptableType($type, $accept)) {

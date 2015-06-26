@@ -7,7 +7,7 @@ use RestMachine\Context;
 use RestMachine\WebMachine;
 
 $defaults = Resource::create()
-    ->availableMediaTypes('application/json');
+    ->availableMediaTypes('application/json', 'application/php');
 
 $foo = Resource::create($defaults)
     ->allowedMethods('GET', 'POST')
