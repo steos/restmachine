@@ -48,7 +48,7 @@ class WebMachine {
                 $resource($node, $context);
                 $node = $this->graph[$node];
             } else {
-                throw new \Exception();
+                throw new \Exception("node '$node' is unknown");
             }
         }
         return [$node, $this->graph[$node]];
@@ -67,7 +67,7 @@ class WebMachine {
         if (isset($context[$name])) {
             $handler = $context[$name];
             if (!is_callable($handler)) {
-                throw new \Exception();
+                throw new \Exception("handler '$name' is not callable");
             }
             $result = call_user_func($handler, $context);
             return $this->toResponse($result, $status, $context);

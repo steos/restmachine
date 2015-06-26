@@ -7,6 +7,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class WebMachineTest extends WebMachineTestCase {
 
+    static function validateJson(Context $context) {
+        if ($context->getRequest()->getContent()) {
+            $context->entity = json_decode($context->getRequest()->getContent());
+            return json_last_error();
+        }
+        return false;
+    }
+
     function testMinimalResource() {
         $resource = Resource::create();
         $response = $this->dispatch($resource, $this->request());
@@ -22,19 +30,28 @@ class WebMachineTest extends WebMachineTestCase {
     function testMalformed() {
         $resource = Resource::create()
             ->allowedMethods('GET', 'POST')
-            ->isMalformed(function(Context $context) {
-                if ($context->getRequest()->getContent()) {
-                    json_decode($context->getRequest()->getContent());
-                    return json_last_error();
-                }
-                return false;
-            });
+            ->isMalformed([self::class, 'validateJson']);
 
         $response = $this->dispatch($resource, $this->request());
         $this->assertStatusCode(Response::HTTP_OK, $response);
 
         $this->assertStatusCode(Response::HTTP_BAD_REQUEST,
             $this->dispatch($resource, $this->request('POST', 'invalid json')));
+
+        $this->assertStatusCode(Response::HTTP_OK,
+            $this->dispatch($resource, $this->request('POST', json_encode(['foo' => 'bar']))));
+    }
+
+    function testUnprocessable() {
+        $resource = Resource::create()
+            ->allowedMethods('GET', 'POST')
+            ->isMalformed([self::class, 'validateJson'])
+            ->isProcessable(function(Context $context) {
+                return !$context->entity || isset($context->entity->foo);
+            });
+
+        $this->assertStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY,
+            $this->dispatch($resource, $this->request('POST', json_encode(['foobar' => 'baz']))));
 
         $this->assertStatusCode(Response::HTTP_OK,
             $this->dispatch($resource, $this->request('POST', json_encode(['foo' => 'bar']))));

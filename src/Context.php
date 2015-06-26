@@ -35,10 +35,10 @@ class Context implements \ArrayAccess {
     }
 
     public function offsetSet($offset, $value) {
-        throw new \Exception();
+        throw new \Exception('you cannot set values using array syntax');
     }
 
     public function offsetUnset($offset) {
-        throw new \Exception();
+        throw new \Exception('you cannot unset values using array syntax');
     }
 }
