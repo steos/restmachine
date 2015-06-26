@@ -56,11 +56,11 @@ class WebMachine {
 
     private function toResponse($handlerResult, $status, Context $context) {
         $mediaType = $context->getMediaType();
-        $content = $this->serialize($handlerResult, $mediaType);
+        $content = is_string($handlerResult) ? $handlerResult : $this->serialize($handlerResult, $mediaType);
         return Response::create(
             $content,
             $status,
-            ['content-type' => $mediaType]
+            ['Content-Type' => $mediaType]
         );
     }
 
