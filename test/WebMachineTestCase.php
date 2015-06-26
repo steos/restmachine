@@ -17,8 +17,10 @@ abstract class WebMachineTestCase extends \PHPUnit_Framework_TestCase {
         return $this->webMachine->run($resource, $request);
     }
 
-    function request($method = 'GET', $content = '') {
-        return Request::create('http://example.com', $method, [], [], [], [], $content);
+    function request($method = 'GET', $content = '', $headers = []) {
+        $request = Request::create('http://example.com', $method, [], [], [], [], $content);
+        $request->headers->add($headers);
+        return $request;
     }
 
     function assertStatusCode($expect, Response $response) {

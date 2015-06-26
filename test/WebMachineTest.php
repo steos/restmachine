@@ -57,5 +57,23 @@ class WebMachineTest extends WebMachineTestCase {
             $this->dispatch($resource, $this->request('POST', json_encode(['foo' => 'bar']))));
     }
 
+    function testMediaTypeNegotiation() {
+        $resource = Resource::create()
+            ->availableMediaTypes('application/json', 'application/php')
+            ->handleOk(function(Context $context) {
+                return ['foo' => 'bar'];
+            });
+
+        $data = ['foo' => 'bar'];
+        $this->assertStatuscode(Response::HTTP_NOT_ACCEPTABLE,
+            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/html'])));
+
+        $this->assertEquals(json_encode($data),
+            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'application/json']))->getContent());
+
+        $this->assertEquals(serialize($data),
+            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'application/php']))->getContent());
+    }
+
 }
 

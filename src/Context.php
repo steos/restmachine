@@ -8,9 +8,20 @@ class Context implements \ArrayAccess {
     private $request;
     private $data = [];
     private $self;
+    private $representation;
+
     function __construct(Request $request, array $self) {
         $this->request = $request;
         $this->self = $self;
+        $this->representation = [];
+    }
+
+    function setMediaType($type) {
+        $this->representation['media-type'] = $type;
+    }
+
+    function getMediaType() {
+        return $this->representation['media-type'];
     }
 
     /**

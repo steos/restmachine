@@ -2,6 +2,8 @@
 
 namespace RestMachine;
 
+use RestMachine\Negotiate;
+
 /**
  * Resource definition builder.
  *
@@ -24,7 +26,7 @@ class Resource {
     function __construct(array $defaults = []) {
         $builtin = [
             'allowed-methods' => ['GET'],
-            'available-media-types' => [],
+            'available-media-types' => ['text/html'],
             'available-languages' => ['*'],
             'available-charsets' => ['UTF-8'],
             'available-encodings' => ['identity'],
@@ -50,6 +52,23 @@ class Resource {
             },
             'method-put?' => function(Context $context) {
                 return $context->getRequest()->getMethod() == 'PUT';
+            },
+            'accept-exists?' => function(Context $context) {
+                if ($context->getRequest()->headers->has('accept')) {
+                    return true;
+                }
+                // fall back to content negotation using */* as accept header
+                $type = Negotiate::bestAllowedContentType(['*/*'], $context['available-media-types']);
+                $context->setMediaType($type);
+                return false;
+            },
+            'media-type-available?' => function(Context $context) {
+                $type = Negotiate::bestAllowedContentType(
+                    $context->getRequest()->getAcceptableContentTypes(),
+                    $context['available-media-types']
+                );
+                $context->setMediaType($type);
+                return $type !== null;
             }
         ];
         $this->conf = array_merge($builtin, $defaults);

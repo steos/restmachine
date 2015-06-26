@@ -55,11 +55,12 @@ class WebMachine {
     }
 
     private function toResponse($handlerResult, $status, Context $context) {
-        //TODO representation!
+        $mediaType = $context->getMediaType();
+        $content = $this->serialize($handlerResult, $mediaType);
         return Response::create(
-            var_export($handlerResult, true) . "\r\n",
+            $content,
             $status,
-            ['content-type' => 'application/php']
+            ['content-type' => $mediaType]
         );
     }
 
