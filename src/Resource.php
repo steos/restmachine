@@ -75,7 +75,7 @@ class Resource {
             return $method . '!';
         }
         $key = self::paramCase($method);
-        if (strlen($key) > 3 && substr($method, 0, 3) == 'is-') {
+        if (strlen($key) > 3 && substr($key, 0, 3) == 'is-') {
             return substr($key, 3) . '?';
         }
         return $key;
