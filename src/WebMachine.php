@@ -11,8 +11,12 @@ use Symfony\Component\HttpFoundation\Response;
 class WebMachine {
     private $serializers;
     private $graph;
+    private $trace;
+    private $enableTrace;
 
     function __construct() {
+        $this->trace = [];
+        $this->enableTrace = false;
         $this->serializers = [
             'application/json' => 'json_encode',
             'text/plain' => 'strval',
@@ -38,11 +42,14 @@ class WebMachine {
     }
 
     private function dispatch(Resource $resource, Context $context, $init = 'service-available?') {
+        $trace = [];
         $node = $init;
         while (!$this->isHandler($node)) {
+            $traceNode = ['node' => $node];
             if ($this->isDecision($node)) {
                 list($pass, $fail) = $this->graph[$node];
                 $result = $resource($node, $context);
+                $traceNode['result'] = $result;
                 $node = $result ? $pass : $fail;
             } else if ($this->isAction($node)) {
                 $resource($node, $context);
@@ -50,18 +57,30 @@ class WebMachine {
             } else {
                 throw new \Exception("node '$node' is unknown");
             }
+            $trace[] = $traceNode;
         }
+        $trace[] = ['node' => $node];
+        $this->trace = $trace;
         return [$node, $this->graph[$node]];
     }
 
     private function toResponse($handlerResult, $status, Context $context) {
         $mediaType = $context->getMediaType();
         $content = is_string($handlerResult) ? $handlerResult : $this->serialize($handlerResult, $mediaType);
-        return Response::create(
+        $response = Response::create(
             $content,
             $status,
             ['Content-Type' => $mediaType]
         );
+        if ($this->enableTrace) {
+            $response->headers->set('X-RestMachine-Trace',
+                array_map(function($trace) {
+                    return array_key_exists('result', $trace)
+                        ? sprintf('%-30s -> %s', $trace['node'], json_encode($trace['result']))
+                        : $trace['node'];
+                }, $this->trace));
+        }
+        return $response;
     }
 
     private function runHandler($name, $status, Context $context) {
@@ -99,5 +118,15 @@ class WebMachine {
 
     function installSerializer($mediaType, callable $f) {
         $this->serializers[$mediaType] = $f;
+        return $this;
+    }
+
+    function enableTrace($enable = true) {
+        $this->enableTrace = $enable;
+        return $this;
+    }
+
+    function getTrace() {
+        return $this->trace;
     }
 }

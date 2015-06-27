@@ -39,6 +39,7 @@ class Resource {
             'valid-entity-length?' => true,
             'processable?' => true,
             'exists?' => true,
+            'can-post-to-missing?' => true,
             'can-put-to-missing?' => true,
             'delete-enacted?' => true,
             'known-content-type?' => true,
@@ -69,6 +70,9 @@ class Resource {
                 );
                 $context->setMediaType($type);
                 return $type !== null;
+            },
+            'post-to-existing?' => function(Context $context) {
+                return $context->getRequest()->getMethod() == 'POST';
             }
         ];
         $this->conf = array_merge($builtin, $defaults);
