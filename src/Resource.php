@@ -89,7 +89,8 @@ class Resource {
     }
 
     public function __call($method, array $args) {
-        $this->conf[$this->keyOf($method)] = count($args) == 1 ? $args[0] : $args;
+        if (count($args) != 1) throw new \InvalidArgumentException();
+        $this->conf[$this->keyOf($method)] = $args[0];
         return $this;
     }
 

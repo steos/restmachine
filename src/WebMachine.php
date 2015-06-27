@@ -104,6 +104,9 @@ class WebMachine {
      */
     function run(Resource $resource, Request $request = null) {
         $context = new Context($request ?: Request::createFromGlobals(), $resource->conf);
+        if ($request->headers->has('X-RestMachine-Trace')) {
+            $this->enableTrace();
+        }
         list($handler, $status) = $this->dispatch($resource, $context);
         return $this->runHandler($handler, $status, $context);
     }

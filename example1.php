@@ -7,10 +7,10 @@ use RestMachine\Context;
 use RestMachine\WebMachine;
 
 $defaults = Resource::create()
-    ->availableMediaTypes('application/json', 'application/php');
+    ->availableMediaTypes(['application/json', 'application/php']);
 
 $foo = Resource::create($defaults)
-    ->allowedMethods('GET', 'POST')
+    ->allowedMethods(['GET', 'POST'])
     ->isMalformed(function(Context $context) {
         if ($context->getRequest()->getContent()) {
             json_decode($context->getRequest()->getContent());
@@ -22,15 +22,19 @@ $foo = Resource::create($defaults)
         return ['hi there'];
     })
     ->post(function(Context $context) {
-        return ['foo' => 'the response'];
+        $context->newEntity = ['foo'];
+    })
+    ->handleCreated(function(Context $context) {
+        return $context->newEntity;
     });
 
 $request = PHP_SAPI != 'cli'
     ? \Symfony\Component\HttpFoundation\Request::createFromGlobals()
     : \Symfony\Component\HttpFoundation\Request::create('http://example.com/foo');
 
-$danceMachine = new WebMachine();
-$response = $danceMachine->run($foo, $request);
+$webMachine = new WebMachine();
+//$danceMachine->enableTrace();
+$response = $webMachine->run($foo, $request);
 
 if (PHP_SAPI != 'cli') {
     $response->send();
