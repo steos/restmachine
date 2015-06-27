@@ -2,8 +2,6 @@
 
 namespace RestMachine;
 
-use RestMachine\Negotiate;
-
 /**
  * Resource definition builder.
  *
@@ -58,7 +56,7 @@ class Resource {
                 if ($context->getRequest()->headers->has('accept')) {
                     return true;
                 }
-                // fall back to content negotation using */* as accept header
+                // fall back to content negotiation using */* as accept header
                 $type = Negotiate::bestAllowedContentType(['*/*'], $context['available-media-types']);
                 $context->setMediaType($type);
                 return false;
