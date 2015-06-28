@@ -41,18 +41,18 @@ class WebMachine {
         return is_string($node) && substr($node, 0, 7) == 'handle-';
     }
 
-    private function dispatch(Resource $resource, Context $context, $init = 'service-available?') {
+    private function dispatch(Context $context, $init = 'service-available?') {
         $trace = [];
         $node = $init;
         while (!$this->isHandler($node)) {
             $traceNode = ['node' => $node];
             if ($this->isDecision($node)) {
                 list($pass, $fail) = $this->graph[$node];
-                $result = $resource($node, $context);
+                $result = $context->value($node);
                 $traceNode['result'] = $result;
                 $node = $result ? $pass : $fail;
             } else if ($this->isAction($node)) {
-                $resource($node, $context);
+                $context->value($node);
                 $node = $this->graph[$node];
             } else {
                 throw new \Exception("node '$node' is unknown");
@@ -64,46 +64,28 @@ class WebMachine {
         return [$node, $this->graph[$node]];
     }
 
-    private function setHeaderMaybe(Response $response, $header, $value) {
-        if ($value) {
-            $response->headers->set($header, $value);
-        }
-    }
-
-    private function toResponse($handlerResult, $status, Context $context) {
+    private function toResponse($handler, $status, Context $context) {
+        $result = $context->value($handler, '');
         $mediaType = $context->getMediaType();
-        $lastModified = $context->getLastModified();
-        $content = is_string($handlerResult)
-            ? $handlerResult
-            : $this->serialize($handlerResult, $mediaType);
+        $lastModified = $context->value('last-modified');
+        $content = is_string($result)
+            ? $result : $this->serialize($result, $mediaType);
         $response = Response::create($content, $status);
-        $this->setHeaderMaybe($response, 'Content-Type', $mediaType);
-        if ($lastModified) {
-            $response->headers->set('Last-Modified', $lastModified->format(\DateTime::RFC1123));
-        }
+        Utils::setHeaderMaybe($response, 'Content-Type', $mediaType);
+        Utils::setHeaderMaybe($response, 'Last-Modified', !$lastModified ?: Utils::httpDate($lastModified));
         if ($this->enableTrace) {
-            $response->headers->set('X-RestMachine-Trace',
-                array_map(function($trace) {
-                    return array_key_exists('result', $trace)
-                        ? sprintf('%-30s -> %s', $trace['node'], json_encode($trace['result']))
-                        : $trace['node'];
-                }, $this->trace));
+            $this->setTraceHeaders($response);
         }
         return $response;
     }
 
-    private function runHandler($name, $status, Context $context) {
-        if (isset($context[$name])) {
-            $handler = $context[$name];
-            if (!is_callable($handler)) {
-                throw new \Exception("handler '$name' is not callable");
-            }
-            $result = call_user_func($handler, $context);
-            return $this->toResponse($result, $status, $context);
-
-        } else {
-            return $this->toResponse('', $status, $context);
-        }
+    private function setTraceHeaders($response) {
+        $response->headers->set('X-RestMachine-Trace',
+            array_map(function($trace) {
+                return array_key_exists('result', $trace)
+                    ? sprintf('%-30s -> %s', $trace['node'], json_encode($trace['result']))
+                    : $trace['node'];
+            }, $this->trace));
     }
 
     /**
@@ -112,12 +94,12 @@ class WebMachine {
      * @return Response
      */
     function run(Resource $resource, Request $request = null) {
-        $context = new Context($request ?: Request::createFromGlobals(), $resource->conf);
+        $context = new Context($request ?: Request::createFromGlobals(), $resource);
         if ($request->headers->has('X-RestMachine-Trace')) {
             $this->enableTrace();
         }
-        list($handler, $status) = $this->dispatch($resource, $context);
-        return $this->runHandler($handler, $status, $context);
+        list($handler, $status) = $this->dispatch($context);
+        return $this->toResponse($handler, $status, $context);
     }
 
     function serialize($value, $mediaType) {

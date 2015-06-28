@@ -17,14 +17,12 @@ class WebMachineTest extends WebMachineTestCase {
 
     function testMinimalResource() {
         $resource = Resource::create();
-        $response = $this->dispatch($resource, $this->request());
-        $this->assertStatusCode(Response::HTTP_OK, $response);
+        $this->assertStatusCode(Response::HTTP_OK, $this->GET($resource));
     }
 
     function testAllowedMethods() {
         $resource = Resource::create()->allowedMethods(['POST']);
-        $response = $this->dispatch($resource, $this->request());
-        $this->assertStatusCode(Response::HTTP_METHOD_NOT_ALLOWED, $response);
+        $this->assertStatusCode(Response::HTTP_METHOD_NOT_ALLOWED, $this->GET($resource));
     }
 
     function testMalformed() {
@@ -32,14 +30,13 @@ class WebMachineTest extends WebMachineTestCase {
             ->allowedMethods(['GET', 'POST'])
             ->isMalformed([self::class, 'validateJson']);
 
-        $response = $this->dispatch($resource, $this->request());
-        $this->assertStatusCode(Response::HTTP_OK, $response);
+        $this->assertStatusCode(Response::HTTP_OK, $this->GET($resource));
 
         $this->assertStatusCode(Response::HTTP_BAD_REQUEST,
-            $this->dispatch($resource, $this->request('POST', 'invalid json')));
+            $this->POST($resource, 'invalid json'));
 
         $this->assertStatusCode(Response::HTTP_CREATED,
-            $this->dispatch($resource, $this->request('POST', json_encode(['foo' => 'bar']))));
+            $this->POST($resource, json_encode(['foo' => 'bar'])));
     }
 
     function testUnprocessable() {
@@ -51,28 +48,26 @@ class WebMachineTest extends WebMachineTestCase {
             });
 
         $this->assertStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY,
-            $this->dispatch($resource, $this->request('POST', json_encode(['foobar' => 'baz']))));
+            $this->POST($resource, json_encode(['foobar' => 'baz'])));
 
         $this->assertStatusCode(Response::HTTP_CREATED,
-            $this->dispatch($resource, $this->request('POST', json_encode(['foo' => 'bar']))));
+            $this->POST($resource, json_encode(['foo' => 'bar'])));
     }
 
     function testMediaTypeNegotiation() {
+        $data = ['foo' => 'bar'];
         $resource = Resource::create()
             ->availableMediaTypes(['application/json', 'application/php'])
-            ->handleOk(function(Context $context) {
-                return ['foo' => 'bar'];
-            });
+            ->handleOk($data);
 
-        $data = ['foo' => 'bar'];
         $this->assertStatuscode(Response::HTTP_NOT_ACCEPTABLE,
-            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/html'])));
+            $this->GET($resource, ['Accept' => 'text/html']));
 
         $this->assertEquals(json_encode($data),
-            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'application/json']))->getContent());
+            $this->GET($resource, ['Accept' => 'application/json'])->getContent());
 
         $this->assertEquals(serialize($data),
-            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'application/php']))->getContent());
+            $this->GET($resource, ['Accept' => 'application/php'])->getContent());
     }
 
     function testMediaTypeNegotiationWithQualityFactor() {
@@ -84,11 +79,11 @@ class WebMachineTest extends WebMachineTestCase {
                 return $type == 'text/html' ? nl2br($message) : $message;
             });
         $this->assertEquals("Hello World!\nHow are you doing?",
-            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/html; q=0.9, text/plain']))
+            $this->GET($resource, ['Accept' => 'text/html; q=0.9, text/plain'])
                 ->getContent());
 
         $this->assertEquals("Hello World!<br />\nHow are you doing?",
-            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/plain; q=0.8, text/html']))
+            $this->GET($resource, ['Accept' => 'text/plain; q=0.8, text/html'])
                 ->getContent());
     }
 
@@ -106,8 +101,7 @@ class WebMachineTest extends WebMachineTestCase {
             });
 
         $entity = ['name' => 'foo bar'];
-        $response = $this->dispatch($resource,
-            $this->request('POST', json_encode($entity)));
+        $response = $this->POST($resource, json_encode($entity));
         $this->assertEquals(json_encode(array_merge($entity, ['id' => 42])), $response->getContent());
         $this->assertEquals(Response::HTTP_CREATED, $response->getStatusCode());
     }
@@ -116,18 +110,16 @@ class WebMachineTest extends WebMachineTestCase {
         $lastModified = new \DateTime();
         $resource = Resource::create()->lastModified($lastModified);
 
-        $response = $this->dispatch($resource, $this->request('GET', '',
-            ['If-Modified-Since' => $lastModified->format(\DateTime::RFC1123)]));
+        $response = $this->GET($resource, ['If-Modified-Since' => Utils::httpDate($lastModified)]);
         $this->assertStatusCode(Response::HTTP_NOT_MODIFIED, $response);
-        $this->assertEquals($lastModified->format(\DateTime::RFC1123),
+        $this->assertEquals(Utils::httpDate($lastModified),
             $response->headers->get('Last-Modified'));
 
         $ifModSince = clone $lastModified;
         $ifModSince->modify('-1 hour');
-        $response = $this->dispatch($resource, $this->request('GET', '',
-            ['If-Modified-Since' => $ifModSince->format(\DateTime::RFC1123)]));
+        $response = $this->GET($resource, ['If-Modified-Since' => Utils::httpDate($ifModSince)]);
         $this->assertStatusCode(Response::HTTP_OK, $response);
-        $this->assertEquals($lastModified->format(\DateTime::RFC1123),
+        $this->assertEquals(Utils::httpDate($lastModified),
             $response->headers->get('Last-Modified'));
     }
 }

@@ -4,16 +4,16 @@ namespace RestMachine;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class Context implements \ArrayAccess {
+class Context {
     private $request;
     private $data = [];
     private $resource;
     private $representation;
     private $ifModifiedSinceDate;
 
-    function __construct(Request $request, array $resource) {
+    function __construct(Request $request, Resource $resource) {
         $this->request = $request;
-        $this->resource = $resource;
+        $this->resource = $resource->copy();
         $this->representation = [];
     }
 
@@ -33,16 +33,12 @@ class Context implements \ArrayAccess {
         return $this->ifModifiedSinceDate;
     }
 
-    /**
-     * @return \DateTime|null
-     */
-    function getLastModified() {
-        // TODO this shouldn't be here; refactor!
-        $date = Resource::value($this['last-modified'], $this);
-        if (!($date instanceof \DateTime)) {
-            return null;
-        }
-        return $date;
+    function value($key, $default = null) {
+        return $this->resource->value($key, $this, $default);
+    }
+
+    function has($key) {
+        return $this->resource->has($key);
     }
 
     /**
@@ -51,26 +47,12 @@ class Context implements \ArrayAccess {
     function getRequest() {
         return $this->request;
     }
+
     function __set($key, $val) {
         $this->data[$key] = $val;
     }
+
     function __get($key) {
         return @$this->data[$key];
-    }
-
-    public function offsetExists($offset) {
-        return array_key_exists($offset, $this->resource);
-    }
-
-    public function offsetGet($offset) {
-        return @$this->resource[$offset];
-    }
-
-    public function offsetSet($offset, $value) {
-        throw new \Exception('you cannot modify the resource');
-    }
-
-    public function offsetUnset($offset) {
-        throw new \Exception('you cannot modify the resource');
     }
 }

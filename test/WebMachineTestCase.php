@@ -23,6 +23,18 @@ abstract class WebMachineTestCase extends \PHPUnit_Framework_TestCase {
         return $request;
     }
 
+    function GET($resource, $headers = []) {
+        return $this->dispatch($resource, $this->request('GET', '', $headers));
+    }
+
+    function POST($resource, $content, $headers = []) {
+        return $this->dispatch($resource, $this->request('POST', $content, $headers));
+    }
+
+    function PUT($resource, $content, $headers = []) {
+        return $this->dispatch($resource, $this->request('PUT', $content, $headers));
+    }
+
     function assertStatusCode($expect, Response $response) {
         $this->assertEquals($expect, $response->getStatusCode());
     }

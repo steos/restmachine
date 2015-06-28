@@ -9,7 +9,7 @@ use RestMachine\WebMachine;
 $defaults = Resource::create()
     ->availableMediaTypes(['application/json', 'application/php']);
 
-$foo = Resource::create($defaults)
+$resource = Resource::create($defaults)
     ->allowedMethods(['GET', 'POST'])
     ->isMalformed(function(Context $context) {
         if ($context->getRequest()->getContent()) {
@@ -33,8 +33,8 @@ $request = PHP_SAPI != 'cli'
     : \Symfony\Component\HttpFoundation\Request::create('http://example.com/foo');
 
 $webMachine = new WebMachine();
-//$danceMachine->enableTrace();
-$response = $webMachine->run($foo, $request);
+//$webMachine->enableTrace();
+$response = $webMachine->run($resource, $request);
 
 if (PHP_SAPI != 'cli') {
     $response->send();
