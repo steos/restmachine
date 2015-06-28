@@ -75,6 +75,23 @@ class WebMachineTest extends WebMachineTestCase {
             $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'application/php']))->getContent());
     }
 
+    function testMediaTypeNegotiationWithQualityFactor() {
+        $resource = Resource::create()
+            ->availableMediaTypes(['text/plain', 'text/html'])
+            ->handleOk(function(Context $context) {
+                $type = $context->getMediaType();
+                $message = "Hello World!\nHow are you doing?";
+                return $type == 'text/html' ? nl2br($message) : $message;
+            });
+        $this->assertEquals("Hello World!\nHow are you doing?",
+            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/html; q=0.9, text/plain']))
+                ->getContent());
+
+        $this->assertEquals("Hello World!<br />\nHow are you doing?",
+            $this->dispatch($resource, $this->request('GET', '', ['Accept' => 'text/plain; q=0.8, text/html']))
+                ->getContent());
+    }
+
     function testSimpleJsonPost() {
         $resource = Resource::create()
             ->availableMediaTypes(['application/json'])
@@ -95,5 +112,19 @@ class WebMachineTest extends WebMachineTestCase {
         $this->assertEquals(Response::HTTP_CREATED, $response->getStatusCode());
     }
 
+    function testIfModifiedSinceConditionalRequest() {
+        $lastModified = new \DateTime();
+        $resource = Resource::create()->lastModified($lastModified);
+
+        $this->assertStatusCode(Response::HTTP_NOT_MODIFIED,
+            $this->dispatch($resource, $this->request('GET', '',
+                ['If-Modified-Since' => $lastModified->format(\DateTime::RFC1123)])));
+
+        $ifModSince = clone $lastModified;
+        $ifModSince->modify('-1 hour');
+        $this->assertStatusCode(Response::HTTP_OK,
+            $this->dispatch($resource, $this->request('GET', '',
+                ['If-Modified-Since' => $ifModSince->format(\DateTime::RFC1123)])));
+    }
 }
 

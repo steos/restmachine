@@ -6,13 +6,19 @@ namespace RestMachine;
  * Resource definition builder.
  *
  * @method \RestMachine\Resource handleOk(mixed $value)
+ * @method \RestMachine\Resource handleCreated(mixed $value)
+ *
  * @method \RestMachine\Resource post(mixed $value)
  * @method \RestMachine\Resource put(mixed $value)
  * @method \RestMachine\Resource patch(mixed $value)
  * @method \RestMachine\Resource delete(mixed $value)
+ *
  * @method \RestMachine\Resource allowedMethods(mixed $value)
  * @method \RestMachine\Resource availableMediaTypes(mixed $value)
+ * @method \RestMachine\Resource lastModified(mixed $value)
+ *
  * @method \RestMachine\Resource isMalformed(mixed $value)
+ * @method \RestMachine\Resource isProcessable(mixed $value)
  */
 class Resource {
     public $conf;
@@ -42,6 +48,39 @@ class Resource {
             'delete-enacted?' => true,
             'known-content-type?' => true,
 
+            'method-put?' => self::methodEquals('PUT'),
+            'method-delete?' => self::methodEquals('DELETE'),
+            'method-patch?' => self::methodEquals('PATCH'),
+
+            'post-to-existing?' => self::methodEquals('POST'),
+            'put-to-existing?' => self::methodEquals('PUT'),
+
+            'if-modified-since-exists?' => self::hasHeader('If-Modified-Since'),
+
+            'if-modified-since-valid-date?' => function(Context $context) {
+                // TODO handle RFC850/1036 and ANSI C's asctime() format as per rfc 2616
+                // http://tools.ietf.org/html/rfc2616#section-3.3
+                // quote: "clients and servers that parse the date value MUST accept all three formats"
+                $date = \DateTime::createFromFormat(\DateTime::RFC1123,
+                    $context->getRequest()->headers->get('If-Modified-Since'));
+                if ($date) {
+                    $context->setIfModifiedSinceDate($date);
+                }
+                return $date != false;
+            },
+
+            'modified-since?' => function(Context $context) {
+                if (isset($context['last-modified'])) {
+                    $ifModifiedSince = $context->getIfModifiedSinceDate();
+                    $lastModified = self::value($context['last-modified'], $context);
+                    if (!($lastModified instanceof \DateTime)) {
+                        throw new \Exception('lastModified must result in a DateTime instance');
+                    }
+                    return $lastModified > $ifModifiedSince;
+                }
+                return false;
+            },
+
             'known-method?' => function(Context $context) {
                 $methods = ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'];
                 return in_array($context->getRequest()->getMethod(), $methods);
@@ -49,9 +88,7 @@ class Resource {
             'method-allowed?' => function(Context $context) {
                 return in_array($context->getRequest()->getMethod(), $context['allowed-methods']);
             },
-            'method-put?' => function(Context $context) {
-                return $context->getRequest()->getMethod() == 'PUT';
-            },
+
             'accept-exists?' => function(Context $context) {
                 if ($context->getRequest()->headers->has('accept')) {
                     return true;
@@ -69,11 +106,27 @@ class Resource {
                 $context->setMediaType($type);
                 return $type !== null;
             },
-            'post-to-existing?' => function(Context $context) {
-                return $context->getRequest()->getMethod() == 'POST';
-            }
+
         ];
         $this->conf = array_merge($builtin, $defaults);
+    }
+
+    static private function methodEquals($method) {
+        return function(Context $context) use ($method) {
+            return $context->getRequest()->getMethod() == $method;
+        };
+    }
+
+    static private function hasHeader($header) {
+        return function(Context $context) use ($header) {
+            return $context->getRequest()->headers->has($header);
+        };
+    }
+
+    static private function value($value, Context $context) {
+        return is_callable($value)
+            ? call_user_func($value, $context)
+            : $value;
     }
 
     function __invoke($key, $context, $default = null) {
@@ -81,9 +134,7 @@ class Resource {
             return $default;
         }
         $value = $this->conf[$key];
-        return is_callable($value)
-            ? call_user_func($value, $context)
-            : $value;
+        return self::value($value, $context);
     }
 
     public function __call($method, array $args) {

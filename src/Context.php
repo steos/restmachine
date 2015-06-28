@@ -9,6 +9,7 @@ class Context implements \ArrayAccess {
     private $data = [];
     private $resource;
     private $representation;
+    private $ifModifiedSinceDate;
 
     function __construct(Request $request, array $resource) {
         $this->request = $request;
@@ -22,6 +23,15 @@ class Context implements \ArrayAccess {
 
     function getMediaType() {
         return $this->representation['media-type'];
+    }
+
+
+    function setIfModifiedSinceDate(\DateTime $date) {
+        $this->ifModifiedSinceDate = $date;
+    }
+
+    function getIfModifiedSinceDate() {
+        return $this->ifModifiedSinceDate;
     }
 
     /**
