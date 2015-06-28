@@ -70,12 +70,9 @@ class Resource {
             },
 
             'modified-since?' => function(Context $context) {
-                if (isset($context['last-modified'])) {
+                $lastModified = $context->getLastModified();
+                if ($lastModified) {
                     $ifModifiedSince = $context->getIfModifiedSinceDate();
-                    $lastModified = self::value($context['last-modified'], $context);
-                    if (!($lastModified instanceof \DateTime)) {
-                        throw new \Exception('lastModified must result in a DateTime instance');
-                    }
                     return $lastModified > $ifModifiedSince;
                 }
                 return false;
@@ -123,7 +120,7 @@ class Resource {
         };
     }
 
-    static private function value($value, Context $context) {
+    static function value($value, Context $context) {
         return is_callable($value)
             ? call_user_func($value, $context)
             : $value;

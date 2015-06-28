@@ -116,15 +116,19 @@ class WebMachineTest extends WebMachineTestCase {
         $lastModified = new \DateTime();
         $resource = Resource::create()->lastModified($lastModified);
 
-        $this->assertStatusCode(Response::HTTP_NOT_MODIFIED,
-            $this->dispatch($resource, $this->request('GET', '',
-                ['If-Modified-Since' => $lastModified->format(\DateTime::RFC1123)])));
+        $response = $this->dispatch($resource, $this->request('GET', '',
+            ['If-Modified-Since' => $lastModified->format(\DateTime::RFC1123)]));
+        $this->assertStatusCode(Response::HTTP_NOT_MODIFIED, $response);
+        $this->assertEquals($lastModified->format(\DateTime::RFC1123),
+            $response->headers->get('Last-Modified'));
 
         $ifModSince = clone $lastModified;
         $ifModSince->modify('-1 hour');
-        $this->assertStatusCode(Response::HTTP_OK,
-            $this->dispatch($resource, $this->request('GET', '',
-                ['If-Modified-Since' => $ifModSince->format(\DateTime::RFC1123)])));
+        $response = $this->dispatch($resource, $this->request('GET', '',
+            ['If-Modified-Since' => $ifModSince->format(\DateTime::RFC1123)]));
+        $this->assertStatusCode(Response::HTTP_OK, $response);
+        $this->assertEquals($lastModified->format(\DateTime::RFC1123),
+            $response->headers->get('Last-Modified'));
     }
 }
 

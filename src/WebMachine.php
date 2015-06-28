@@ -64,14 +64,23 @@ class WebMachine {
         return [$node, $this->graph[$node]];
     }
 
+    private function setHeaderMaybe(Response $response, $header, $value) {
+        if ($value) {
+            $response->headers->set($header, $value);
+        }
+    }
+
     private function toResponse($handlerResult, $status, Context $context) {
         $mediaType = $context->getMediaType();
-        $content = is_string($handlerResult) ? $handlerResult : $this->serialize($handlerResult, $mediaType);
-        $response = Response::create(
-            $content,
-            $status,
-            ['Content-Type' => $mediaType]
-        );
+        $lastModified = $context->getLastModified();
+        $content = is_string($handlerResult)
+            ? $handlerResult
+            : $this->serialize($handlerResult, $mediaType);
+        $response = Response::create($content, $status);
+        $this->setHeaderMaybe($response, 'Content-Type', $mediaType);
+        if ($lastModified) {
+            $response->headers->set('Last-Modified', $lastModified->format(\DateTime::RFC1123));
+        }
         if ($this->enableTrace) {
             $response->headers->set('X-RestMachine-Trace',
                 array_map(function($trace) {
@@ -93,7 +102,7 @@ class WebMachine {
             return $this->toResponse($result, $status, $context);
 
         } else {
-            return Response::create('', $status);
+            return $this->toResponse('', $status, $context);
         }
     }
 

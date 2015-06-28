@@ -22,9 +22,8 @@ class Context implements \ArrayAccess {
     }
 
     function getMediaType() {
-        return $this->representation['media-type'];
+        return @$this->representation['media-type'];
     }
-
 
     function setIfModifiedSinceDate(\DateTime $date) {
         $this->ifModifiedSinceDate = $date;
@@ -32,6 +31,18 @@ class Context implements \ArrayAccess {
 
     function getIfModifiedSinceDate() {
         return $this->ifModifiedSinceDate;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    function getLastModified() {
+        // TODO this shouldn't be here; refactor!
+        $date = Resource::value($this['last-modified'], $this);
+        if (!($date instanceof \DateTime)) {
+            return null;
+        }
+        return $date;
     }
 
     /**
