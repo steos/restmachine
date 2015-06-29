@@ -16,6 +16,7 @@ namespace RestMachine;
  * @method \RestMachine\Resource allowedMethods(mixed $value)
  * @method \RestMachine\Resource availableMediaTypes(mixed $value)
  * @method \RestMachine\Resource lastModified(mixed $value)
+ * @method \RestMachine\Resource etag(mixed $value)
  *
  * @method \RestMachine\Resource isMalformed(mixed $value)
  * @method \RestMachine\Resource isProcessable(mixed $value)

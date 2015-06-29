@@ -13,6 +13,7 @@ class Context {
     private $ifModifiedSinceDate;
     private $ifUnmodifiedSinceDate;
     private $etag;
+    private $location;
 
     function __construct(Request $request, Resource $resource) {
         $this->request = $request;
@@ -49,6 +50,14 @@ class Context {
 
     function setEtag($etag) {
         $this->etag = $etag;
+    }
+
+    public function getLocation() {
+        return $this->location;
+    }
+
+    public function setLocation($location) {
+        $this->location = $location;
     }
 
     function value($key, $default = null) {
