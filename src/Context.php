@@ -6,23 +6,25 @@ use Symfony\Component\HttpFoundation\Request;
 
 class Context {
     private $request;
-    private $data = [];
     private $resource;
-    private $representation;
+    private $data = [];
+
+    private $mediaType;
     private $ifModifiedSinceDate;
+    private $ifUnmodifiedSinceDate;
+    private $etag;
 
     function __construct(Request $request, Resource $resource) {
         $this->request = $request;
         $this->resource = $resource->copy();
-        $this->representation = [];
     }
 
     function setMediaType($type) {
-        $this->representation['media-type'] = $type;
+        $this->mediaType = $type;
     }
 
     function getMediaType() {
-        return @$this->representation['media-type'];
+        return $this->mediaType;
     }
 
     function setIfModifiedSinceDate(\DateTime $date) {
@@ -31,6 +33,22 @@ class Context {
 
     function getIfModifiedSinceDate() {
         return $this->ifModifiedSinceDate;
+    }
+
+    public function getIfUnmodifiedSinceDate() {
+        return $this->ifUnmodifiedSinceDate;
+    }
+
+    public function setIfUnmodifiedSinceDate(\DateTime $ifUnmodifiedSinceDate) {
+        $this->ifUnmodifiedSinceDate = $ifUnmodifiedSinceDate;
+    }
+
+    function getEtag() {
+        return $this->etag;
+    }
+
+    function setEtag($etag) {
+        $this->etag = $etag;
     }
 
     function value($key, $default = null) {

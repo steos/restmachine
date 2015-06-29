@@ -33,4 +33,11 @@ class Utils {
     static function httpDate(\DateTime $date) {
         return $date->format(\DateTime::RFC1123);
     }
+
+    static function parseHttpDate($str) {
+        // TODO handle RFC850/1036 and ANSI C's asctime() format as per rfc 2616
+        // http://tools.ietf.org/html/rfc2616#section-3.3
+        // quote: "clients and servers that parse the date value MUST accept all three formats"
+        return \DateTime::createFromFormat(\DateTime::RFC1123, $str);
+    }
 }

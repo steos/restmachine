@@ -5,7 +5,7 @@ namespace RestMachine;
 class ResourceDefaults {
     static function create() {
         return [
-            'allowed-methods' => ['GET'],
+            'allowed-methods' => ['GET', 'HEAD'],
             'available-media-types' => ['text/html'],
             'available-languages' => ['*'],
             'available-charsets' => ['UTF-8'],
@@ -24,23 +24,41 @@ class ResourceDefaults {
             'delete-enacted?' => true,
             'known-content-type?' => true,
 
+            'is-options?' => self::methodEquals('OPTIONS'),
             'method-put?' => self::methodEquals('PUT'),
             'method-delete?' => self::methodEquals('DELETE'),
             'method-patch?' => self::methodEquals('PATCH'),
 
             'post-to-existing?' => self::methodEquals('POST'),
             'put-to-existing?' => self::methodEquals('PUT'),
+            'post-to-gone?' => self::methodEquals('POST'),
 
+            'if-match-star-exists-for-missing?' => self::headerEquals('If-Match', '*'),
+            'if-match-star?' => self::headerEquals('If-Match', '*'),
+            'if-none-match-star?' => self::headerEquals('If-None-Match', '*'),
+
+            'etag-matches-for-if-none?' => self::matchEtag('If-None-Match'),
+            'etag-matches-for-if-match?' => self::matchEtag('If-Match'),
+
+            'if-unmodified-since-exists?' => self::hasHeader('If-Unmodified-Since'),
             'if-modified-since-exists?' => self::hasHeader('If-Modified-Since'),
 
+            'if-none-match?' => function(Context $context) {
+                return in_array($context->getRequest()->getMethod(), ['GET', 'HEAD']);
+            },
+
             'if-modified-since-valid-date?' => function(Context $context) {
-                // TODO handle RFC850/1036 and ANSI C's asctime() format as per rfc 2616
-                // http://tools.ietf.org/html/rfc2616#section-3.3
-                // quote: "clients and servers that parse the date value MUST accept all three formats"
-                $date = \DateTime::createFromFormat(\DateTime::RFC1123,
-                    $context->getRequest()->headers->get('If-Modified-Since'));
+                $date = Utils::parseHttpDate($context->getRequest()->headers->get('If-Modified-Since'));
                 if ($date) {
                     $context->setIfModifiedSinceDate($date);
+                }
+                return $date != false;
+            },
+
+            'if-unmodified-since-valid-date?' => function(Context $context) {
+                $date = Utils::parseHttpDate($context->getRequest()->headers->get('If-Unmodified-Since'));
+                if ($date) {
+                    $context->setIfUnmodifiedSinceDate($date);
                 }
                 return $date != false;
             },
@@ -54,8 +72,17 @@ class ResourceDefaults {
                 return false;
             },
 
+            'unmodified-since?' => function(Context $context) {
+                $lastModified = $context->value('last-modified');
+                if ($lastModified) {
+                    $ifUnmodifiedSince = $context->getIfUnmodifiedSinceDate();
+                    return $lastModified > $ifUnmodifiedSince;
+                }
+                return false;
+            },
+
             'known-method?' => function(Context $context) {
-                $methods = ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'];
+                $methods = ['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'PATCH'];
                 return in_array($context->getRequest()->getMethod(), $methods);
             },
             'method-allowed?' => function(Context $context) {
@@ -82,6 +109,7 @@ class ResourceDefaults {
                 return $type !== null;
             },
 
+
         ];
     }
 
@@ -94,6 +122,19 @@ class ResourceDefaults {
     static private function hasHeader($header) {
         return function(Context $context) use ($header) {
             return $context->getRequest()->headers->has($header);
+        };
+    }
+
+    static private function headerEquals($header, $value) {
+        return function(Context $context) use ($header, $value) {
+            return $value == $context->getRequest()->headers->get($header);
+        };
+    }
+
+    static function matchEtag($header) {
+        return function(Context $context) use ($header) {
+            $context->setEtag($context->value('etag'));
+            return $context->getEtag() == $context->getRequest()->headers->get($header);
         };
     }
 }

@@ -68,15 +68,25 @@ class WebMachine {
         $result = $context->value($handler, '');
         $mediaType = $context->getMediaType();
         $lastModified = $context->value('last-modified');
-        $content = is_string($result)
-            ? $result : $this->serialize($result, $mediaType);
-        $response = Response::create($content, $status);
+        $response = Response::create('', $status);
+        if (!$context->getRequest()->isMethod('HEAD')) {
+            $response->setContent(is_string($result)
+                ? $result : $this->serialize($result, $mediaType));
+        }
+        Utils::setHeaderMaybe($response, 'Vary', $this->buildVaryHeader($context));
         Utils::setHeaderMaybe($response, 'Content-Type', $mediaType);
         Utils::setHeaderMaybe($response, 'Last-Modified', !$lastModified ?: Utils::httpDate($lastModified));
         if ($this->enableTrace) {
             $this->setTraceHeaders($response);
         }
         return $response;
+    }
+
+    private function buildVaryHeader(Context $context) {
+        $vary = [
+            'Content-Type' => $context->getMediaType()
+        ];
+        return implode(',', array_keys(array_filter($vary)));
     }
 
     private function setTraceHeaders($response) {
