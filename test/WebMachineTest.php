@@ -122,5 +122,26 @@ class WebMachineTest extends WebMachineTestCase {
         $this->assertEquals(Utils::httpDate($lastModified),
             $response->headers->get('Last-Modified'));
     }
+
+    function testEtagWithIfMatch() {
+        $etag = '"foo42"';
+        $resource = Resource::create()
+            ->etag($etag)
+            ->allowedMethods(['PUT'])
+            ->isNew(false)
+            ->isRespondWithEntity(true)
+            ->put(function(Context $context) {
+                $context->put = true;
+            })
+            ->handleOk(function(Context $context) {
+                return json_encode($context->put);
+            });
+
+        $response = $this->PUT($resource, 'foo', ['If-Match' => $etag]);
+        $this->assertEquals('true', $response->getContent());
+
+        $this->assertStatusCode(Response::HTTP_PRECONDITION_FAILED,
+            $this->PUT($resource, 'foo', ['If-Match' => 'blub']));
+    }
 }
 

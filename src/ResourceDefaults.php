@@ -42,6 +42,8 @@ class ResourceDefaults {
 
             'if-unmodified-since-exists?' => self::hasHeader('If-Unmodified-Since'),
             'if-modified-since-exists?' => self::hasHeader('If-Modified-Since'),
+            'if-match-exists?' => self::hasHeader('If-Match'),
+            'if-none-match-exists?' => self::hasHeader('If-None-Match'),
 
             'if-none-match?' => function(Context $context) {
                 return in_array($context->getRequest()->getMethod(), ['GET', 'HEAD']);
