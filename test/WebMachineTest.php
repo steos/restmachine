@@ -142,6 +142,9 @@ class WebMachineTest extends WebMachineTestCase {
 
         $this->assertStatusCode(Response::HTTP_PRECONDITION_FAILED,
             $this->PUT($resource, 'foo', ['If-Match' => 'blub']));
+
+        $this->assertStatusCode(Response::HTTP_PRECONDITION_FAILED,
+            $this->PUT($resource->isExists(false), '', ['If-Match' => '*']));
     }
 }
 
