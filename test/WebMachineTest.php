@@ -146,5 +146,41 @@ class WebMachineTest extends WebMachineTestCase {
         $this->assertStatusCode(Response::HTTP_PRECONDITION_FAILED,
             $this->PUT($resource->isExists(false), '', ['If-Match' => '*']));
     }
+
+    function testTypicalCollectionResource() {
+        $entities = [];
+        $resource = Resource::create()
+            ->allowedMethods(['GET', 'POST'])
+            ->availableMediaTypes(['application/json'])
+            ->isMalformed([self::class, 'validateJson'])
+            ->isProcessable(function(Context $context) {
+                return $context->getRequest()->isMethod('GET')
+                    || isset($context->entity->title);
+            })
+            ->post(function(Context $context) use (&$entities) {
+                $entity = (array)$context->entity;
+                $entity['id'] = count($entities) + 1;
+                $entities[] = $entity;
+                $context->newEntity = $entity;
+            })
+            ->handleOk(function(Context $context) use (&$entities) {
+                return $entities;
+            })
+            ->handleCreated(function(Context $context) {
+                return $context->newEntity;
+            });
+
+        $this->assertEquals('[]', $this->GET($resource)->getContent());
+        $this->assertStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, $this->POST($resource, json_encode([])));
+        $response = $this->POST($resource, json_encode(['title' => 'testing post']));
+        $this->assertStatusCode(Response::HTTP_CREATED, $response);
+        $this->assertEquals(['id' => 1, 'title' => 'testing post'], (array)json_decode($response->getContent()));
+
+        $this->assertStatusCode(Response::HTTP_CREATED, $this->POST($resource, json_encode(['title' => 'lorem ipsum'])));
+
+        $this->assertEquals([(object)['id' => 1, 'title' => 'testing post'],
+                             (object)['id' => 2, 'title' => 'lorem ipsum']],
+            json_decode($this->GET($resource)->getContent()));
+    }
 }
 
