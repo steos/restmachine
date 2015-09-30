@@ -5,20 +5,16 @@ restmachine is a [webmachine](https://github.com/basho/webmachine) implementatio
 ## Example
 
 ```php
-use RestMachine\Resource;
-use RestMachine\WebMachine;
 
-$webMachine = new WebMachine();
-$webMachine->run(
   Resource::create()
-    ->availableMediaTypes('application/json', 'application/php')
-    ->allowedMethods('GET', 'PUT')
-    ->isExisting(function($context) {
+    ->availableMediaTypes(['application/json', 'application/php'])
+    ->allowedMethods(['GET', 'PUT'])
+    ->isExists(function($context) {
         $context->entity = $db->find($context->param('id'));
         return $context->entity !== null;
     })
     ->isMalformed(function($context) {
-       if ($context->getRequest()->getMethod() == 'PUT') {
+       if ($context->getRequest()->isMethod('PUT')) {
          $context->requestData = json_decode($context->getRequest()->getBody());
          return json_last_error();
        }
@@ -34,11 +30,12 @@ $webMachine->run(
     ->handleOk(function($context) {
         return $context->entity;
     })
-);
+
 ```
 
-## Install
+### Install
 
+With composer:
 
 ```
 {
@@ -48,18 +45,25 @@ $webMachine->run(
 }
 ```
 
-## Minimum PHP Version
-
-restmachine currently requires PHP 5.5 at a minimum.
+restmachine currently requires PHP >= 5.5.
 
 ## Credits
 
 Credits go to [clojure-liberator](http://clojure-liberator.github.io/liberator/) where I extracted the decision graph
-and which I heavily used as reference and documentation to understand the webmachine execution model.
+and which I heavily used as reference and documentation to understand the webmachine execution model
+and the excellent [Symfony HttpFoundation](https://github.com/symfony/HttpFoundation) which RestMachine is built on. 
 
 ## Project Status
 
-Pre-alpha at best. Contributions, suggestions, flames are welcome.
+This is alpha software. A lot of the functionality is still missing. It will be buggy and there is no
+stable API anything.
+
+### TODO
+
+- Caching and conditional requests
+- Content negotiation for language, charset, encoding
+- Standalone wrapper with routing
+- PATCH
 
 ## License
 

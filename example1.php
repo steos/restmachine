@@ -11,6 +11,8 @@ $defaults = Resource::create()
 
 $resource = Resource::create($defaults)
     ->allowedMethods(['GET', 'POST'])
+    ->lastModified(new \DateTime('2015-06-28', new \DateTimeZone('Europe/Vienna')))
+    ->etag('aXs3f')
     ->isMalformed(function(Context $context) {
         if ($context->getRequest()->getContent()) {
             json_decode($context->getRequest()->getContent());

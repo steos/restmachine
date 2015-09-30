@@ -24,10 +24,8 @@ class Utils {
         return $xs;
     }
 
-    static function setHeaderMaybe(Response $response, $header, $value) {
-        if ($value) {
-            $response->headers->set($header, $value);
-        }
+    static function setHeadersMaybe(Response $response, $headers) {
+        $response->headers->add(array_filter($headers));
     }
 
     static function httpDate(\DateTime $date) {

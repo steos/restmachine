@@ -73,13 +73,13 @@ class WebMachine {
             $response->setContent(is_string($result)
                 ? $result : $this->serialize($result, $mediaType));
         }
-        if (in_array($status, [201, 301, 303, 307])) {
-            Utils::setHeaderMaybe($response, 'Location', $context->getLocation());
-        }
-        Utils::setHeaderMaybe($response, 'Vary', $this->buildVaryHeader($context));
-        Utils::setHeaderMaybe($response, 'Content-Type', $mediaType);
-        Utils::setHeaderMaybe($response, 'Last-Modified', $lastModified ? Utils::httpDate($lastModified) : null);
-        Utils::setHeaderMaybe($response, 'ETag', $context->value('etag'));
+        Utils::setHeadersMaybe($response, [
+            'Location' => $context->getLocation(),
+            'Vary' => $this->buildVaryHeader($context),
+            'Content-Type' => $mediaType,
+            'Last-Modified' => $lastModified ? Utils::httpDate($lastModified) : null,
+            'ETag' => $context->value('etag')
+        ]);
         if ($this->enableTrace) {
             $this->setTraceHeaders($response);
         }
