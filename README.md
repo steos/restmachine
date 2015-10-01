@@ -247,7 +247,6 @@ You will find bugs and the API may still change radically.
 
 ### TODO
 
-- Caching and conditional requests
 - Content negotiation for language, charset, encoding
 - Standalone wrapper with routing
 - PATCH method
