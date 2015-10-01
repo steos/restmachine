@@ -267,9 +267,16 @@ Resource::create()
 
 ## Credits
 
-Credits go to [clojure-liberator](http://clojure-liberator.github.io/liberator/) where we extracted the decision graph
-and which we heavily used as reference and documentation to understand the webmachine execution model
-and the excellent [Symfony HttpFoundation](https://github.com/symfony/HttpFoundation) which RestMachine is built on. 
+Credits go to
+
+- [clojure-liberator](http://clojure-liberator.github.io/liberator/)
+  where we extracted the decision graph and which we heavily used as reference and documentation to understand the webmachine execution model
+
+- [Symfony HttpFoundation](https://github.com/symfony/HttpFoundation)
+  the best HTTP abstraction for PHP which RestMachine is built on.
+
+- [25th-floor](http://25th-floor.com)
+  for making it possible to work on this on company time.
 
 ## Project Status
 
