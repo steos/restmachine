@@ -230,7 +230,7 @@ Vary: Accept
 `If-Match`-Example:
 
 ```
-$ curl http://localhost/dancery/example1.php -i -s -H 'If-Match: foo'
+$ curl http://localhost -i -s -H 'If-Match: foo'
 HTTP/1.0 412 Precondition Failed
 ```
 
