@@ -197,7 +197,7 @@ Resource::create()
 ```
 $ curl http://localhost -H 'Accept: application/php' -i -s
 HTTP/1.0 200 OK
-Vary: Content-Type
+Vary: Accept
 Last-Modified: Sun, 28 Jun 2015 00:00:00 +0200
 Content-Length: 25
 Connection: close
@@ -224,7 +224,7 @@ Example:
 ```
 curl http://localhost -i -s -H 'If-Modified-Since: Sun, 28 Jun 2015 00:00:00 +0200'
 HTTP/1.0 304 Not Modified
-Vary: Content-Type
+Vary: Accept
 ```
 
 `If-Match`-Example:
