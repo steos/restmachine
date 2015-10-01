@@ -88,7 +88,11 @@ class WebMachine {
 
     private function buildVaryHeader(Context $context) {
         $vary = [
-            'Content-Type' => $context->getMediaType()
+            'Accept' => $context->getMediaType(),
+            // not implemented yet
+            // 'Accept-Language' => $context->getLanguage(),
+            // 'Accept-Charset' => $context->getCharset(),
+            // 'Accept-Encoding' => $context->getEncoding(),
         ];
         return implode(',', array_keys(array_filter($vary)));
     }
