@@ -234,6 +234,37 @@ $ curl http://localhost -i -s -H 'If-Match: foo'
 HTTP/1.0 412 Precondition Failed
 ```
 
+### Context
+
+RestMachine provides a context object that lives for the duration of request execution. This context
+is passed to all callable values and can be used to obtain the actual HTTP request object.
+Furthermore it is used to gather information during decision functions that may be relevant later.
+RestMachine internally uses this context for content negotiation and conditional requests. You can put
+arbitrary values into the context to communicate with later running decisions, actions or handlers.
+
+Example:
+
+```php
+Resource::create()
+    ->isMalformed(function($context) {
+        if ($context->getRequest()->isMethod('POST')) {
+            $requestBody = $context->getRequest()->getContent();
+            // validate request body
+            if (!isValid($requestBody)) {
+                return true;
+            }
+            // parse request body
+            $context->entity = parseRequestBody($requestBody);
+        }
+        return false;
+    })
+    ->post(function($context) {
+        // do something with the entity we put into context
+        // during the malformed? decision
+        $db->insert($context->entity);
+    });
+```
+
 ## Credits
 
 Credits go to [clojure-liberator](http://clojure-liberator.github.io/liberator/) where we extracted the decision graph
