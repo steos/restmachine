@@ -57,7 +57,6 @@ RestMachine is built on a simple decision tree. This tree can have three differe
 has a name and is represented as just a key-value-pair in an array.
 
 ```php
-
 $decisions = [
   // decision
   'malformed?' => ['handle-malformed', 'authorized?'],
@@ -80,7 +79,6 @@ For every decision node it looks in the resource specification for that node and
 Resource specification example:
 
 ```php
-
 $resource = [
     'malformed?' => function($context) {
         // do some validation on the request body here
@@ -106,13 +104,11 @@ just builds up an array like the one shown above, so your IDE can better help yo
 all those node names.
 
 ```php
-
 $resource = Resource::create()
   ->isMalformed(function($context) {
       return false;
   })
   ->isServiceAvailable(true)
-
 ```
 
 This creates the same resource array as shown above except it will be merged with the builtin defaults
@@ -222,7 +218,7 @@ Example:
 `If-Modified-Since`-Example:
 
 ```
-curl http://localhost -i -s -H 'If-Modified-Since: Sun, 28 Jun 2015 00:00:00 +0200'
+$ curl http://localhost -i -s -H 'If-Modified-Since: Sun, 28 Jun 2015 00:00:00 +0200'
 HTTP/1.0 304 Not Modified
 Vary: Accept
 ```
@@ -265,6 +261,125 @@ Resource::create()
     });
 ```
 
+### Serialization
+
+RestMachine supports multiple serialization formats and you can easily provide your own serializer.
+Return values of handler functions will automatically be serialized according to the negotiated media type if a serializer for that media type is available. If the handler returns a string no serialization will be performed.
+
+RestMachine has builtin serializers for:
+- `application/json` using `json_encode`
+- `text/php` using `var_export`
+- `application/php` using `serialize`
+- `text/plain` using `strval` (i.e. it just coerces the value to a string)
+
+Example:
+
+```php
+Resource::create()
+  ->availableMediaTypes(['application/php', 'application/json'])
+  ->handleOk(function($context) {
+    return ['hi there'];
+  });
+```
+
+```
+$ curl http://localhost -i -s
+HTTP/1.0 200 OK
+Vary: Accept
+Content-Type: application/json
+
+["hi there"]
+```
+
+```
+$ curl http://localhost -i -s -H 'Accept: application/php'
+HTTP/1.0 200 OK
+Vary: Accept
+Content-Type: application/php
+
+a:1:{i:0;s:8:"hi there";}
+```
+
+#### Custom Serializer
+
+A RestMachine serializer is just a function that accepts an arbitrary PHP value as its only argument and returns a serialized representation of that value. Example:
+
+```php
+$webMachine = new RestMachine\WebMachine();
+$webMachine->installSerializer('text/csv', function($value) {
+  // we're assuming that $value is always a two-dimensional array
+  $stream = fopen('php://temp', 'w');
+  foreach ($value as $row) {
+    fputcsv($stream, $row);
+  }
+  rewind($stream);
+  return stream_get_contents($stream);
+});
+```
+
+```php
+Resource::create()
+  ->availableMediaTypes(['application/php', 'application/json', 'text/csv'])
+  ->handleOk(function($context) {
+    return [['row1 col1', 'row1 col2', 'row1 col3']
+           ,['row2 col1', 'row2 col2', 'row2 col3']
+           ,['row3 col1', 'row3 col2', 'row3 col3']];
+  });
+```
+
+```
+$ curl http://localhost -i -s -H 'Accept: text/csv'
+HTTP/1.0 200 OK
+Vary: Accept
+Content-Type: text/csv;charset=UTF-8
+
+"row1 col1","row1 col2","row1 col3"
+"row2 col1","row2 col2","row2 col3"
+"row3 col1","row3 col2","row3 col3"
+```
+
+### Debugging
+
+Sometimes it can be hard to figure out how RestMachine arrived at a specific handler and response. To make it easier
+you can enable execution tracing.
+
+```php
+$webMachine->enableTrace();
+```
+
+If tracing is enabled RestMachine will remember the path it took through the decision graph and output `X-RestMachine-Trace` headers:
+
+```
+X-RestMachine-Trace: service-available?             -> true
+X-RestMachine-Trace: known-method?                  -> true
+X-RestMachine-Trace: uri-too-long?                  -> null
+X-RestMachine-Trace: method-allowed?                -> true
+X-RestMachine-Trace: malformed?                     -> false
+X-RestMachine-Trace: authorized?                    -> true
+X-RestMachine-Trace: allowed?                       -> true
+X-RestMachine-Trace: valid-content-header?          -> true
+X-RestMachine-Trace: known-content-type?            -> true
+X-RestMachine-Trace: valid-entity-length?           -> true
+X-RestMachine-Trace: is-options?                    -> false
+X-RestMachine-Trace: accept-exists?                 -> true
+X-RestMachine-Trace: media-type-available?          -> true
+X-RestMachine-Trace: accept-language-exists?        -> null
+X-RestMachine-Trace: accept-charset-exists?         -> null
+X-RestMachine-Trace: accept-encoding-exists?        -> null
+X-RestMachine-Trace: processable?                   -> true
+X-RestMachine-Trace: exists?                        -> true
+X-RestMachine-Trace: if-match-exists?               -> false
+X-RestMachine-Trace: if-unmodified-since-exists?    -> false
+X-RestMachine-Trace: if-none-match-exists?          -> false
+X-RestMachine-Trace: if-modified-since-exists?      -> false
+X-RestMachine-Trace: method-delete?                 -> false
+X-RestMachine-Trace: method-patch?                  -> false
+X-RestMachine-Trace: post-to-existing?              -> false
+X-RestMachine-Trace: put-to-existing?               -> false
+X-RestMachine-Trace: multiple-representations?      -> null
+X-RestMachine-Trace: handle-ok
+```
+
 ## Credits
 
 Credits go to
@@ -273,11 +388,8 @@ Credits go to
   where we extracted the decision graph and which we heavily used as reference and documentation to understand the webmachine execution model
 
 - [Symfony HttpFoundation](https://github.com/symfony/HttpFoundation)
-  the best HTTP abstraction for PHP which RestMachine is built on.
-
-- [25th-floor](http://25th-floor.com)
-  for making it possible to work on this on company time.
-
+  which RestMachine is built on.
+   
 ## Project Status
 
 This is alpha software. Some functionality is still missing.
