@@ -29,11 +29,13 @@ class TodoResource {
         return Resource::create(self::defaults())
             ->allowedMethods(['GET', 'POST'])
             ->isProcessable(self::validator())
-            ->post(function ($context) use ($db) {
-                $context->entity->id = Todo::create($db, $context->entity);
+            ->post(function (Context $context) use ($db) {
+                $id = Todo::create($db, $context->entity);
+                $context->setLocation($context->getRequest()->getPathInfo() . "/$id");
+                $context->newEntity = Todo::fetchOne($db, $id);
             })
             ->handleCreated(function($context) {
-                return $context->entity;
+                return $context->newEntity;
             })
             ->handleOk(function (Context $context) use ($db) {
                 return Todo::fetchAll($db);
