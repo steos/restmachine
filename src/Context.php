@@ -82,4 +82,8 @@ class Context {
     function __get($key) {
         return @$this->data[$key];
     }
+
+    function __isset($key) {
+        return array_key_exists($key, $this->data);
+    }
 }
