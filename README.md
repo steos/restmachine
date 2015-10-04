@@ -57,6 +57,23 @@ restmachine currently requires PHP >= 5.5.
 - [Conditional Requests](doc/conditional-requests.md)
 - [Debugging](doc/debugging.md)
 
+### Examples
+
+A fully baked example app using Silex can be found in the `examples/silex` directory.
+It uses a sqlite database therefore you will need the sqlite PDO driver to run it.
+
+```
+# just serve the public directory through a webserver
+$ php -S 0.0.0.0:8080 examples/silex/public/index.php
+
+# and you can use the "/todos" resources
+$ curl http://localhost:8080/todos -i -s -X POST -d '{"text":"switch to restmachine"}'
+$ curl http://localhost:8080/todos/1 -i -s -X PUT -d '{"text":"switch to restmachine", "done":true}'
+$ curl http://localhost:8080/todos/1 -i -s -X DELETE
+$ curl http://localhost:8080/todos/1 -i -s
+
+```
+
 ## Credits
 
 Credits go to
