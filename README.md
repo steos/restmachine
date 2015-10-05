@@ -87,7 +87,7 @@ Credits go to
 ## Project Status
 
 This is alpha software. Some functionality is still missing.
-You will find bugs and the API may still change radically.
+There will be bugs. The API may still change, but should be fairly stable.
 
 ### TODO
 
