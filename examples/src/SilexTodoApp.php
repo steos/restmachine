@@ -1,11 +1,11 @@
 <?php
 
-namespace SilexTodos;
+namespace Examples;
 
 use RestMachine\WebMachine;
-use Silex\Application as SilexApp;
+use Silex\Application;
 
-class App {
+class SilexTodoApp {
 
     private $app;
     private $webmachine;
@@ -14,22 +14,13 @@ class App {
     function __construct($dbFile) {
         $this->db = new \PDO("sqlite:$dbFile");
         $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->app = new SilexApp();
+        $this->app = new Application();
         $this->app['debug'] = true;
         $this->webmachine = new WebMachine();
     }
 
     function run() {
-
-        $this->db->query(
-<<<SQL
-CREATE TABLE IF NOT EXISTS todos (
-  todo_id INTEGER PRIMARY KEY AUTOINCREMENT,
-  todo_text TEXT NOT NULL,
-  todo_done INTEGER NOT NULL DEFAULT 0
-)
-SQL
-        );
+        Todo::setupDb($this->db);
 
         $this->app->match('/todos', function() {
             return $this->dispatch(TodoResource::collection($this->db));

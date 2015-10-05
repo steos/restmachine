@@ -1,6 +1,6 @@
 <?php
 
-namespace SilexTodos;
+namespace Examples;
 
 use RestMachine\Resource;
 use RestMachine\Context;

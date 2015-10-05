@@ -9,7 +9,7 @@
     "autoload": {
         "psr-4": {
             "RestMachine\\": ["src/", "test/"],
-            "SilexTodos\\": ["examples/silex/src/"]
+            "Examples\\": ["examples/src/"]
         }
     },
     "require-dev": {

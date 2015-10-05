@@ -1,6 +1,6 @@
 <?php
 
-namespace SilexTodos;
+namespace Examples;
 
 class Todo {
 
@@ -66,5 +66,17 @@ class Todo {
             return false;
         }
         return true;
+    }
+
+    static function setupDb(\PDO $db) {
+        $db->query(
+<<<SQL
+CREATE TABLE IF NOT EXISTS todos (
+  todo_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  todo_text TEXT NOT NULL,
+  todo_done INTEGER NOT NULL DEFAULT 0
+)
+SQL
+        );
     }
 }
