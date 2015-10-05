@@ -12,7 +12,7 @@ the HTTP protocol and its semantics.
   Resource::create()
     ->availableMediaTypes(['application/json', 'application/php'])
     ->allowedMethods(['GET', 'PUT'])
-    ->isExists(function($context) {
+    ->exists(function($context) {
         $context->entity = $db->find($context->param('id'));
         return $context->entity !== null;
     })
