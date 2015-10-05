@@ -104,11 +104,8 @@ class Resource {
     }
 
     private function keyOf($method) {
-        if (in_array($method, ['put', 'post', 'patch', 'delete'])) {
-            return $method . '!';
-        }
         $key = Utils::paramCase($method);
-        if (strlen($key) > 3 && substr($key, 0, 3) == 'is-') {
+        if (strpos($key, 'is-') === 0) {
             return substr($key, 3) . '?';
         }
         return $key;
