@@ -3,36 +3,31 @@
 restmachine is a [webmachine](https://github.com/basho/webmachine) implementation for PHP.
 
 Webmachine brings HTTP semantic awareness to your application. It allows you to declaratively
-specify dynamic HTTP resources and frees you from having to worry about correct implementation of
-the HTTP protocol and its semantics.
+specify dynamic HTTP resources so you don't have to worry about implementation details.
 
 ## Example
 
 ```php
-  Resource::create()
-    ->availableMediaTypes(['application/json', 'application/php'])
-    ->allowedMethods(['GET', 'PUT'])
-    ->exists(function($context) {
-        $context->entity = $db->find($context->param('id'));
-        return $context->entity !== null;
+Resource::create(self::defaults())
+    ->allowedMethods(['GET', 'PUT', 'DELETE'])
+    ->isProcessable(self::validator())
+    ->canPutToMissing(false)
+    ->isNew(false)
+    ->isRespondWithEntity(function(Context $context) {
+        return $context->getRequest()->isMethod('PUT');
     })
-    ->isMalformed(function($context) {
-       if ($context->getRequest()->isMethod('PUT')) {
-         $context->requestData = json_decode($context->getRequest()->getBody());
-         return json_last_error();
-       }
-       return false;
+    ->exists(function($context) use ($db, $id) {
+        return Todo::exists($db, $id);
     })
-    ->isProcessable(function($context) {
-        return $context->getRequest()->getMethod() != 'PUT'
-          || $validator->isValid($context->requestData);
+    ->put(function($context) use ($db, $id) {
+        Todo::update($db, $id, $context->entity);
     })
-    ->put(function($context) {
-        $context->entity = $db->update($context->param('id'), $context->requestData);
+    ->delete(function($context) use ($db, $id) {
+        Todo::delete($db, $id);
     })
-    ->handleOk(function($context) {
-        return $context->entity;
-    })
+    ->handleOk(function(Context $context) use ($db, $id) {
+        return Todo::fetchOne($db, $id);
+    });
 ```
 
 ### Install
@@ -59,19 +54,20 @@ restmachine currently requires PHP >= 5.5.
 
 ### Examples
 
-A fully baked example app using Silex can be found in the `examples/silex` directory.
+A fully baked example app using Silex can be found in the `examples` directory.
 It uses a sqlite database therefore you will need the sqlite PDO driver to run it.
 
 ```
-# just serve the public directory through a webserver
-$ php -S 0.0.0.0:8080 examples/silex/public/index.php
+# just serve the silex.php entry point through a webserver
+$ php -S 0.0.0.0:8080 examples/public/silex.php
 
-# and you can use the "/todos" resources
-$ curl http://localhost:8080/todos -i -s -X POST -d '{"text":"switch to restmachine"}'
-$ curl http://localhost:8080/todos/1 -i -s -X PUT -d '{"text":"switch to restmachine", "done":true}'
+# then you can use the "/todos" resources
+$ curl http://localhost:8080/todos -i -s -X POST -d \
+    '{"text":"switch to restmachine"}'
+$ curl http://localhost:8080/todos/1 -i -s -X PUT -d \
+    '{"text":"switch to restmachine", "done":true}'
 $ curl http://localhost:8080/todos/1 -i -s -X DELETE
 $ curl http://localhost:8080/todos/1 -i -s
-
 ```
 
 ## Credits
@@ -86,7 +82,7 @@ Credits go to
    
 ## Project Status
 
-This is alpha software. Some functionality is still missing.
+This is beta software. Some functionality is still missing.
 There will be bugs. The API may still change, but should be fairly stable.
 
 ### TODO
@@ -94,6 +90,7 @@ There will be bugs. The API may still change, but should be fairly stable.
 - Content negotiation for language, charset, encoding
 - Standalone wrapper with routing
 - PATCH method
+- handle RFC850/1036 and ANSI C's asctime() format as per rfc 2616 (`Utils::parseHttpDate`)
 
 ## License
 
