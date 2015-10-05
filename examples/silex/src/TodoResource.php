@@ -46,12 +46,12 @@ class TodoResource {
         return Resource::create(self::defaults())
             ->allowedMethods(['GET', 'PUT', 'DELETE'])
             ->isProcessable(self::validator())
-            ->isCanPutToMissing(false)
+            ->canPutToMissing(false)
             ->isNew(false)
             ->isRespondWithEntity(function(Context $context) {
                 return $context->getRequest()->isMethod('PUT');
             })
-            ->isExists(function($context) use ($db, $id) {
+            ->exists(function($context) use ($db, $id) {
                 return Todo::exists($db, $id);
             })
             ->put(function($context) use ($db, $id) {
