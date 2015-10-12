@@ -2,8 +2,10 @@
 
 ## Decisions, Decisions
 
-RestMachine is built on a simple decision tree. This tree can have three different kinds of nodes. Every node
-has a name and is represented as just a key-value-pair in an array.
+RestMachine is built on a simple decision tree. This tree was taken verbatim from liberator so you can
+just refer to [this graph](https://clojure-liberator.github.io/liberator/assets/img/decision-graph.svg) to see
+it in all its glory.
+In RestMachine it is represented as an array where every key-value-pair is a node:
 
 ```php
 $decisions = [
@@ -25,7 +27,7 @@ For every decision node it looks in the resource specification for that node and
 
 ## Resource Specification
 
-Resource specification example:
+Internally a resource specification is just an array mapping nodes to values:
 
 ```php
 $resource = [
@@ -39,12 +41,13 @@ $resource = [
 
 ```
 
-The resource specification values can be scalars or callable. If a node is not present it just evaluates
-to false, if it's a scalar it evaluates that scalar in a truthy context, and if it's a callable it uses the
-return value of that callable as the decision result.
+Every node can map to any value.
+If the value is `callable` it will be invoked with a `$context` parameter and its return value will be used.
+Otherwise the value will be used as is. How it is used depends on the node type:
 
-RestMachine has sensible default values for most decisions so you don't have to specify
-`service-available?` and things like that all the time.
+ - **decision node** values will be used in a truthy context to decide on the next node.
+ - **handlers** are leaf nodes. The value is serialized if necessary and used as response body.
+ - **actions** are for side effects only so the only sensible thing to use are `callable`'s. Their return value doesn't matter.
 
 ## Resource Builder
 
@@ -66,26 +69,13 @@ This creates the same resource array as shown above except it will be merged wit
 ### Directives
 
 Directives are entries in the resource specification that don't correspond to nodes in the decision tree.
-Those are used as configuration of default decisions. Like any other value in the resource specification
-it can be a scalar or a callable so the value can depend on the actual request. For example:
-
-```php
-// those are both equivalent
-Resource::create()->allowedMethods(['GET']);
-// when using a callable you can inspect the context (which also gives
-// you access to the request object) to decide on the return value
-Resource::create()->allowedMethods(function($context) {
-  return ['GET'];
-})
-```
-
-This array will be used by the default implementation of `method-allowed?` which will try to match the actual
-request method with one in the array.
+Those are used as configuration of default decisions.
 
 #### availableMediaTypes
+Type: `string[]`
 
-The value for this directive must evaluate to an array of strings. This array is used by the default implementation
-of `media-type-available?` to negotiate the content type of the response.
+Used by the default implementation of `media-type-available?` to negotiate the content type of the response.
+The negotiated type is set on the context (`setMediaType`, `getMediaType`).
 
 Example:
 
@@ -94,9 +84,9 @@ Resource::create()->availableMediaTypes(['application/json', 'text/csv']);
 ```
 
 #### allowedMethods
+Type: `string[]`
 
-The value for this directive must also evaluate to an array of strings. This array should contain a list of 
-allowed HTTP methods. RestMachine will try to match those against the actual HTTP request method in its 
+A list of allowed HTTP methods.RestMachine will try to match those against the actual HTTP request method in its 
 default implementation of the `method-allowed?` decision.
 
 Example:
@@ -106,18 +96,19 @@ Resource::create()->allowedMethods(['GET', 'HEAD']);
 ```
 
 #### lastModified
+Type: `DateTime`
 
-The value for this directive must be a `DateTime` instance. It is used by the default implementations
-of the `modified-since?` and `unmodified-since?` decisions to implement
-`If-Modified-Since` and `If-Unmodified-Since` semantics.
+Used by the default implementations of the `modified-since?` and `unmodified-since?`
+decisions to implement `If-Modified-Since` and `If-Unmodified-Since` semantics.
 
 ```php
 Resource::create()->lastModified(new \DateTime('2015-10-01'));
 ```
 
 #### etag
+Type: `string`
 
-The etag value must evaluate to a string. This value is used to implement `If-Match` and `If-None-Match` semantics by
+Used to implement `If-Match` and `If-None-Match` semantics by
 the default implementations of the `etag-matches-for-if-none?` and `etag-matches-for-if-match?` decisions.
 
 ```php
