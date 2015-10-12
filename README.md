@@ -1,6 +1,6 @@
 # restmachine
 
-restmachine is a [webmachine](https://github.com/basho/webmachine) implementation for PHP.
+restmachine is a [webmachine](https://github.com/webmachine/webmachine) implementation for PHP.
 
 Webmachine brings HTTP semantic awareness to your application. It allows you to declaratively
 specify dynamic HTTP resources so you don't have to worry about implementation details.
