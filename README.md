@@ -37,7 +37,7 @@ With composer:
 ```
 {
   "require": {
-    "steos/restmachine": "dev-master"
+    "25th/restmachine": "dev-master"
   }
 }
 ```
