@@ -46,6 +46,7 @@ restmachine currently requires PHP >= 5.5.
 
 ## Documentation
 
+- [Getting Started](doc/getting-started.md)
 - [How It Works](doc/how-it-works.md)
 - [Serialization](doc/serialization.md)
 - [Content Negotiation](doc/content-negotiation.md)
