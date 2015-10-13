@@ -1,6 +1,6 @@
 # restmachine
 
-[![Build Status](https://travis-ci.org/25th-floor/restmachine.svg?branch=master)](https://travis-ci.org/25th/restmachine)
+[![Build Status](https://travis-ci.org/25th-floor/restmachine.svg?branch=master)](https://travis-ci.org/25th-floor/restmachine)
 
 restmachine is a [webmachine](https://github.com/webmachine/webmachine) implementation for PHP.
 
