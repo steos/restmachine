@@ -1,5 +1,7 @@
 # restmachine
 
+[[!Build Status](https://travis-ci.org/25th-floor/restmachine.svg?branch=master)](https://travis-ci.org/25th/restmachine)
+
 restmachine is a [webmachine](https://github.com/webmachine/webmachine) implementation for PHP.
 
 Webmachine brings HTTP semantic awareness to your application. It allows you to declaratively
