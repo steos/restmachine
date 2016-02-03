@@ -1,6 +1,6 @@
 # restmachine
 
-[![Build Status](https://travis-ci.org/25th-floor/restmachine.svg?branch=master)](https://travis-ci.org/25th-floor/restmachine)
+[![Build Status](https://travis-ci.org/steos/restmachine.svg?branch=master)](https://travis-ci.org/steos/restmachine)
 
 restmachine is a [webmachine](https://github.com/webmachine/webmachine) implementation for PHP.
 
@@ -39,7 +39,7 @@ With composer:
 ```
 {
   "require": {
-    "25th/restmachine": "dev-master"
+    "steos/restmachine": "dev-master"
   }
 }
 ```
@@ -82,7 +82,7 @@ Credits go to
 
 - [Symfony HttpFoundation](https://github.com/symfony/HttpFoundation)
   which RestMachine is built on.
-   
+
 ## Project Status
 
 This is beta software. Some functionality is still missing.
