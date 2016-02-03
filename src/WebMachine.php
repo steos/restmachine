@@ -64,8 +64,7 @@ class WebMachine {
         return [$node, $this->graph[$node]];
     }
 
-    private function toResponse($handler, $status, Context $context) {
-        $result = $context->value($handler, '');
+    private function buildResponse($status, $context, $result) {
         $mediaType = $context->getMediaType();
         $lastModified = $context->value('last-modified');
         $response = Response::create('', $status);
@@ -80,6 +79,12 @@ class WebMachine {
             'Last-Modified' => $lastModified ? Utils::httpDate($lastModified) : null,
             'ETag' => $context->value('etag')
         ]);
+        return $response;
+    }
+
+    private function toResponse($handler, $status, Context $context) {
+        $result = $context->value($handler, '');
+        $response = $result instanceof Response ? $result : $this->buildResponse($status, $context, $result);
         if ($this->enableTrace) {
             $this->setTraceHeaders($response);
         }
