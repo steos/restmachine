@@ -3,7 +3,7 @@
     "description": "webmachine for PHP",
     "license": "BSD-3-Clause",
     "require": {
-        "php": ">=5.5",
+        "php": ">=5.4",
         "symfony/http-foundation": "~2.6"
     },
     "autoload": {

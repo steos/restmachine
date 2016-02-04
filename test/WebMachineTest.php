@@ -28,7 +28,7 @@ class WebMachineTest extends WebMachineTestCase {
     function testMalformed() {
         $resource = Resource::create()
             ->allowedMethods(['GET', 'POST'])
-            ->isMalformed([self::class, 'validateJson']);
+            ->isMalformed([__CLASS__, 'validateJson']);
 
         $this->assertStatusCode(Response::HTTP_OK, $this->GET($resource));
 
@@ -42,7 +42,7 @@ class WebMachineTest extends WebMachineTestCase {
     function testUnprocessable() {
         $resource = Resource::create()
             ->allowedMethods(['GET', 'POST'])
-            ->isMalformed([self::class, 'validateJson'])
+            ->isMalformed([__CLASS__, 'validateJson'])
             ->isProcessable(function(Context $context) {
                 return !$context->entity || isset($context->entity->foo);
             });
@@ -91,7 +91,7 @@ class WebMachineTest extends WebMachineTestCase {
         $resource = Resource::create()
             ->availableMediaTypes(['application/json'])
             ->allowedMethods(['POST'])
-            ->isMalformed([self::class, 'validateJson'])
+            ->isMalformed([__CLASS__, 'validateJson'])
             ->post(function(Context $context) {
                 $context->newEntity = clone $context->entity;
                 $context->newEntity->id = 42;
@@ -152,7 +152,7 @@ class WebMachineTest extends WebMachineTestCase {
         $resource = Resource::create()
             ->allowedMethods(['GET', 'POST'])
             ->availableMediaTypes(['application/json'])
-            ->isMalformed([self::class, 'validateJson'])
+            ->isMalformed([__CLASS__, 'validateJson'])
             ->isProcessable(function(Context $context) {
                 return $context->getRequest()->isMethod('GET')
                     || isset($context->entity->title);
@@ -183,4 +183,3 @@ class WebMachineTest extends WebMachineTestCase {
             json_decode($this->GET($resource)->getContent()));
     }
 }
-

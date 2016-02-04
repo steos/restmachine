@@ -44,7 +44,7 @@ With composer:
 }
 ```
 
-restmachine currently requires PHP >= 5.5.
+restmachine currently requires PHP >= 5.4.
 
 ## Documentation
 
