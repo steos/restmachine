@@ -2,6 +2,10 @@
 
 namespace RestMachine;
 
+use Symfony\Component\HttpFoundation\AcceptHeader;
+use Symfony\Component\HttpFoundation\AcceptHeaderItem;
+use Symfony\Component\HttpFoundation\Request;
+
 class ResourceDefaults {
     static function create() {
         return [
@@ -105,7 +109,7 @@ class ResourceDefaults {
             'media-type-available?' => function(Context $context) {
                 $type = Negotiate::bestAllowedContentType(
                     $context->getRequest()->getAcceptableContentTypes(),
-                    $context->value('available-media-types')
+                    self::filterAvailableMediaTypes($context->getRequest(), $context->value('available-media-types'))
                 );
                 $context->setMediaType($type);
                 return $type !== null;
@@ -113,6 +117,22 @@ class ResourceDefaults {
 
 
         ];
+    }
+
+    static function filterAvailableMediaTypes(Request $request, array $availableMediaTypes) {
+        $acceptable = self::getAcceptableContentTypes($request);
+        return array_filter($availableMediaTypes, function($mediaType) use ($request, $acceptable) {
+            foreach ($acceptable as $accept) {
+                if (Negotiate::acceptableType($mediaType, $accept->getValue()) && $accept->getQuality() == 0) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    static function getAcceptableContentTypes(Request $request) {
+        return AcceptHeader::fromString($request->headers->get('Accept'))->all();
     }
 
     static private function methodEquals($method) {
