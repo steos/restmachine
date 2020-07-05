@@ -87,6 +87,19 @@ class WebMachineTest extends WebMachineTestCase {
                 ->getContent());
     }
 
+    function testMediaTypeNegotiationWithQualityFactorZero() {
+        $resource = Resource::create()
+            ->availableMediaTypes(['text/html', 'text/plain'])
+            ->handleOk(function(Context $context) {
+                $type = $context->getMediaType();
+                $message = "Hello World!\nHow are you doing?";
+                return $type == 'text/html' ? nl2br($message) : $message;
+            });
+        $this->assertEquals("Hello World!\nHow are you doing?",
+            $this->GET($resource, ['Accept' => 'text/*, text/html;q=0'])
+                ->getContent());
+    }
+
     function testSimpleJsonPost() {
         $resource = Resource::create()
             ->availableMediaTypes(['application/json'])

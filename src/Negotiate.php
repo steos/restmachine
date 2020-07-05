@@ -2,7 +2,6 @@
 
 namespace RestMachine;
 
-
 class Negotiate {
 
     static function bestAllowedContentType(array $acceptable, array $allowed) {
