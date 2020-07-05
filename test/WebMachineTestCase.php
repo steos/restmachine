@@ -2,14 +2,15 @@
 
 namespace RestMachine;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-abstract class WebMachineTestCase extends \PHPUnit_Framework_TestCase {
+abstract class WebMachineTestCase extends TestCase {
     /** @var WebMachine */
     private $webMachine;
 
-    function setUp() {
+    function setUp(): void {
         $this->webMachine = new WebMachine();
     }
 

@@ -2,7 +2,9 @@
 
 namespace RestMachine;
 
-class NegotiateTest extends \PHPUnit_Framework_TestCase {
+use PHPUnit\Framework\TestCase;
+
+class NegotiateTest extends TestCase {
     function testAcceptableType() {
         $this->assertEquals('text/html', Negotiate::acceptableType('text/html', 'text/html'));
         $this->assertEquals('text/html', Negotiate::acceptableType('text/html', 'text/*'));

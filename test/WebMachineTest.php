@@ -107,7 +107,7 @@ class WebMachineTest extends WebMachineTestCase {
     }
 
     function testIfModifiedSinceConditionalRequest() {
-        $lastModified = new \DateTime();
+        $lastModified = Utils::parseHttpDate(Utils::httpDate(new \DateTime()));
         $resource = Resource::create()->lastModified($lastModified);
 
         $response = $this->GET($resource, ['If-Modified-Since' => Utils::httpDate($lastModified)]);
@@ -144,7 +144,7 @@ class WebMachineTest extends WebMachineTestCase {
             $this->PUT($resource, 'foo', ['If-Match' => 'blub']));
 
         $this->assertStatusCode(Response::HTTP_PRECONDITION_FAILED,
-            $this->PUT($resource->isExists(false), '', ['If-Match' => '*']));
+            $this->PUT($resource->exists(false), '', ['If-Match' => '*']));
     }
 
     function testTypicalCollectionResource() {
